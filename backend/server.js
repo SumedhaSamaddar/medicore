@@ -37,7 +37,7 @@ app.use('/api/analytics', require('./routes/analytics'))
 // ================= SERVE FRONTEND (PRODUCTION) =================
 if (process.env.NODE_ENV === 'production') {
   // Your React build is in the root 'build' folder, not in frontend/build
-  const buildPath = path.join(__dirname, '../frontend/build')
+const buildPath = path.join(__dirname, '..', 'build')
   
   console.log('Serving static files from:', buildPath)
   
