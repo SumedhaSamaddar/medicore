@@ -8,7 +8,7 @@ const EmergencyRequest = require('../models/EmergencyRequest')
 // ========== HOSPITALS ==========
 
 // GET all hospitals
-router.get('/hospitals', auth, async (req, res) => {
+router.get('/hospitals', async (req, res) => {
   try {
     const hospitals = await Hospital.find({ isActive: true })
       .sort({ distance: 1 })
@@ -19,7 +19,7 @@ router.get('/hospitals', auth, async (req, res) => {
 })
 
 // POST create hospital
-router.post('/hospitals', auth, async (req, res) => {
+router.post('/hospitals', async (req, res) => {
   try {
     const hospital = await Hospital.create(req.body)
     res.json(hospital)
@@ -29,7 +29,7 @@ router.post('/hospitals', auth, async (req, res) => {
 })
 
 // PUT update hospital beds
-router.put('/hospitals/:id/beds', auth, async (req, res) => {
+router.put('/hospitals/:id/beds', async (req, res) => {
   try {
     const hospital = await Hospital.findByIdAndUpdate(
       req.params.id,
@@ -43,7 +43,7 @@ router.put('/hospitals/:id/beds', auth, async (req, res) => {
 })
 
 // DELETE hospital
-router.delete('/hospitals/:id', auth, async (req, res) => {
+router.delete('/hospitals/:id', async (req, res) => {
   try {
     await Hospital.findByIdAndUpdate(req.params.id, { isActive: false })
     res.json({ message: 'Hospital deactivated' })
@@ -55,7 +55,7 @@ router.delete('/hospitals/:id', auth, async (req, res) => {
 // ========== AMBULANCES ==========
 
 // GET all ambulances
-router.get('/ambulances', auth, async (req, res) => {
+router.get('/ambulances', async (req, res) => {
   try {
     const ambulances = await Ambulance.find({ isActive: true })
     res.json(ambulances)
@@ -65,7 +65,7 @@ router.get('/ambulances', auth, async (req, res) => {
 })
 
 // GET available ambulances only
-router.get('/ambulances/available', auth, async (req, res) => {
+router.get('/ambulances/available', async (req, res) => {
   try {
     const ambulances = await Ambulance.find({ 
       isActive: true,
@@ -78,7 +78,7 @@ router.get('/ambulances/available', auth, async (req, res) => {
 })
 
 // POST create ambulance
-router.post('/ambulances', auth, async (req, res) => {
+router.post('/ambulances', async (req, res) => {
   try {
     const ambulance = await Ambulance.create(req.body)
     res.json(ambulance)
@@ -88,7 +88,7 @@ router.post('/ambulances', auth, async (req, res) => {
 })
 
 // PUT update ambulance status
-router.put('/ambulances/:id/status', auth, async (req, res) => {
+router.put('/ambulances/:id/status', async (req, res) => {
   try {
     const { status, currentLocation } = req.body
     const ambulance = await Ambulance.findByIdAndUpdate(
@@ -103,7 +103,7 @@ router.put('/ambulances/:id/status', auth, async (req, res) => {
 })
 
 // DELETE ambulance
-router.delete('/ambulances/:id', auth, async (req, res) => {
+router.delete('/ambulances/:id', async (req, res) => {
   try {
     await Ambulance.findByIdAndUpdate(req.params.id, { isActive: false })
     res.json({ message: 'Ambulance deactivated' })
@@ -115,7 +115,7 @@ router.delete('/ambulances/:id', auth, async (req, res) => {
 // ========== EMERGENCY REQUESTS ==========
 
 // GET all emergency requests
-router.get('/requests', auth, async (req, res) => {
+router.get('/requests', async (req, res) => {
   try {
     const requests = await EmergencyRequest.find()
       .populate('patient', 'name phone')
@@ -130,7 +130,7 @@ router.get('/requests', auth, async (req, res) => {
 })
 
 // POST create emergency request
-router.post('/requests', auth, async (req, res) => {
+router.post('/requests', async (req, res) => {
   try {
     const { patientName, patientPhone, location, symptoms, emergencyLevel, ambulanceId, hospitalId, patient } = req.body
 
@@ -179,7 +179,7 @@ router.post('/requests', auth, async (req, res) => {
 })
 
 // PUT update emergency request status
-router.put('/requests/:id/status', auth, async (req, res) => {
+router.put('/requests/:id/status', async (req, res) => {
   try {
     const { status, notes } = req.body
     const updates = { status, notes }
@@ -226,7 +226,7 @@ router.put('/requests/:id/status', auth, async (req, res) => {
 })
 
 // POST AI emergency assessment
-router.post('/assess', auth, async (req, res) => {
+router.post('/assess', async (req, res) => {
   const { symptoms } = req.body
 
   try {
@@ -292,7 +292,7 @@ router.post('/assess', auth, async (req, res) => {
 })
 
 // GET statistics
-router.get('/stats', auth, async (req, res) => {
+router.get('/stats', async (req, res) => {
   try {
     const totalHospitals = await Hospital.countDocuments({ isActive: true })
     const totalAmbulances = await Ambulance.countDocuments({ isActive: true })
