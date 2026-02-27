@@ -19,7 +19,7 @@ app.use('/api/medicines', require('./routes/medicines'))
 app.use('/api/invoices', require('./routes/invoices'))
 app.use('/api/ai', require('./routes/ai'))
 app.use('/api/emergency', require('./routes/emergency'))
-app.use('/api/business', require('./routes/business'))
+app.use('/api/analytics', require('./routes/analytics'))
 
 // Serve frontend static files in production
 if (process.env.NODE_ENV === 'production') {
