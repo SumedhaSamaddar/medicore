@@ -34,21 +34,20 @@ app.use('/api/analytics', require('./routes/analytics'))
 
 // ================= SERVE FRONTEND (PRODUCTION) =================
 // ================= SERVE FRONTEND (PRODUCTION) =================
+// ================= SERVE FRONTEND (PRODUCTION) =================
 if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '../build')
-
-  // Serve static files
+  // Your React build is in the root 'build' folder, not in frontend/build
+  const buildPath = path.join(__dirname, '../frontend/build')
+  
+  console.log('Serving static files from:', buildPath)
+  
   app.use(express.static(buildPath))
-
-  // SPA fallback - serve index.html for all non-API routes
-  app.use((req, res, next) => {
-    if (req.path.startsWith('/api')) {
-      return next()
-    }
+  
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api')) return next()
     res.sendFile(path.join(buildPath, 'index.html'))
   })
 }
-
 // ================= API 404 =================
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'API route not found' })
