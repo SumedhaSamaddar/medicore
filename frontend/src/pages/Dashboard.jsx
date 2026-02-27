@@ -73,7 +73,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-4 md:gap-6 mb-8">
           <StatCard icon="🧑‍⚕️" title="Today's Patients" 
                     value="24" change="+12%" color="green" />
           <StatCard icon="📅" title="Appointments"   
@@ -85,7 +85,7 @@ export default function Dashboard() {
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 md:gap-6 mb-8">
 
           {/* Bar Chart */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
