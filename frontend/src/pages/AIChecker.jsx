@@ -224,3 +224,4 @@ Symptoms: ${symptoms}`
     </div>
   )
 }
+
