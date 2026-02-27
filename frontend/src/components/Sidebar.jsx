@@ -9,7 +9,7 @@ const navItems = [
   { icon: '🧾', label: 'Billing',      path: '/billing',      color: 'yellow' },
   { icon: '🤖', label: 'AI Checker',   path: '/ai-checker',   color: 'cyan' },
   { icon: '🚨', label: 'Emergency',    path: '/emergency',    color: 'red' },
-  { icon: '📈', label: 'Analytics',    path: '/business',     color: 'emerald' }
+  { icon: '📈', label: 'Analytics',    path: '/analytics',     color: 'emerald' }
 ]
 
 const colorClasses = {
