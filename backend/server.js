@@ -22,17 +22,14 @@ app.use('/api/emergency', require('./routes/emergency'))
 app.use('/api/analytics', require('./routes/analytics'))
 
 // Serve frontend static files in production
+// Serve frontend static files in production
 if (process.env.NODE_ENV === 'production') {
   const buildPath = path.join(__dirname, '../frontend/build')
   app.use(express.static(buildPath))
   
   // Catch all other routes - serve index.html
-  app.get('*', (req, res) => {
+  app.get('/*', (req, res) => {  // CHANGED FROM '*' TO '/*'
     res.sendFile(path.join(buildPath, 'index.html'))
-  })
-} else {
-  app.get('/', (req, res) => {
-    res.json({ message: '✅ Backend running' })
   })
 }
 
