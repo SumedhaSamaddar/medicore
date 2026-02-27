@@ -60,8 +60,8 @@ export default function Login() {
           <p className="text-gray-400">Healthcare ERP & CRM System</p>
         </div>
 
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">Login to Dashboard</h2>
+        <div className="bg-gray-900 border border-gray-800 rounded-2xl shadow-2xl p-4 md:p-8">
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-6 text-center">Login to Dashboard</h2>
           
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

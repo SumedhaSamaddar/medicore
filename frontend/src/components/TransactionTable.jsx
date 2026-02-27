@@ -1,7 +1,7 @@
 export default function TransactionTable({ transactions, onDelete }) {
   return (
-    <div className="bg-white rounded shadow">
-      <table className="w-full text-sm">
+<div className="overflow-x-auto">
+  <table className="w-full min-w-[600px]">
         <thead className="border-b bg-gray-50">
           <tr>
             <th className="p-2 text-left">Type</th>

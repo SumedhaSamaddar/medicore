@@ -52,12 +52,12 @@ export default function Dashboard() {
       <Sidebar />
 
       {/* Main Content — shifted right to account for sidebar */}
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-white">Dashboard</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white">Dashboard</h2>
             <p className="text-gray-400">
               {time.toLocaleDateString('en-IN', { 
                 weekday: 'long', year: 'numeric', 
@@ -66,14 +66,14 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-3xl font-mono text-white">
+            <p className="text-xl md:text-2xl md:text-3xl font-mono text-white">
               {time.toLocaleTimeString()}
             </p>
           </div>
         </div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           <StatCard icon="🧑‍⚕️" title="Today's Patients" 
                     value="24" change="+12%" color="green" />
           <StatCard icon="📅" title="Appointments"   
@@ -85,7 +85,7 @@ export default function Dashboard() {
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
 
           {/* Bar Chart */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">

@@ -52,12 +52,12 @@ export default function Appointments() {
     <div className="flex bg-gray-950 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-white">Appointments</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white">Appointments</h2>
             <p className="text-gray-400">{appointments.length} total appointments</p>
           </div>
           <button
@@ -73,7 +73,7 @@ export default function Appointments() {
         {showForm && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
             <h3 className="text-white font-semibold mb-4">New Appointment</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <input
                 placeholder="Patient Name"
                 value={form.patient}

@@ -50,12 +50,12 @@ export default function Inventory() {
     <div className="flex bg-gray-950 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-white">Medicine Inventory</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white">Medicine Inventory</h2>
             <p className="text-gray-400">{medicines.length} medicines ·
               <span className="text-red-400 ml-1">{lowStockCount} low stock</span>
             </p>
@@ -73,7 +73,7 @@ export default function Inventory() {
         {lowStockCount > 0 && (
           <div className="bg-red-950 border border-red-800 rounded-xl p-4 mb-6 
                           flex items-center gap-3">
-            <span className="text-2xl">⚠️</span>
+            <span className="text-xl md:text-2xl">⚠️</span>
             <div>
               <p className="text-red-400 font-semibold">
                 {lowStockCount} medicines are running low
@@ -96,7 +96,7 @@ export default function Inventory() {
         {showForm && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
             <h3 className="text-white font-semibold mb-4">Add New Medicine</h3>
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 { key: 'name', placeholder: 'Medicine Name', type: 'text' },
                 { key: 'category', placeholder: 'Category (Tablet/Syrup)', type: 'text' },

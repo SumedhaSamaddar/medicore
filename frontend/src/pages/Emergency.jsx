@@ -330,9 +330,9 @@ export default function Emergency() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-950">
-        <div className="bg-red-900/50 border border-red-500 rounded-xl p-8 max-w-md text-center">
+        <div className="bg-red-900/50 border border-red-500 rounded-xl p-4 md:p-8 max-w-md text-center">
           <span className="text-6xl mb-4 block">⚠️</span>
-          <h2 className="text-2xl font-bold text-white mb-2">Error Loading Data</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Error Loading Data</h2>
           <p className="text-red-300 mb-4">{error}</p>
           <button 
             onClick={fetchData}
@@ -350,14 +350,14 @@ export default function Emergency() {
     <div className="flex bg-gray-950 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
         {/* Emergency Header */}
         <div className="bg-red-900 border-2 border-red-500 rounded-xl p-6 mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-6xl">🚨</span>
               <div>
-                <h2 className="text-3xl font-bold text-white">Emergency Management</h2>
+                <h2 className="text-xl md:text-2xl md:text-3xl font-bold text-white">Emergency Management</h2>
                 <p className="text-red-300 text-lg">
                   Hospital Network • Ambulance Fleet • Emergency Requests
                 </p>
@@ -367,17 +367,17 @@ export default function Emergency() {
               <div className="flex gap-4">
                 <div className="bg-red-950 rounded-lg p-3 text-center">
                   <p className="text-red-400 text-xs">Hospitals</p>
-                  <p className="text-white font-bold text-2xl">{stats.totalHospitals || 0}</p>
+                  <p className="text-white font-bold text-xl md:text-2xl">{stats.totalHospitals || 0}</p>
                 </div>
                 <div className="bg-red-950 rounded-lg p-3 text-center">
                   <p className="text-red-400 text-xs">Available Ambulances</p>
-                  <p className="text-white font-bold text-2xl">
+                  <p className="text-white font-bold text-xl md:text-2xl">
                     {stats.availableAmbulances || 0}/{stats.totalAmbulances || 0}
                   </p>
                 </div>
                 <div className="bg-red-950 rounded-lg p-3 text-center">
                   <p className="text-red-400 text-xs">Active Requests</p>
-                  <p className="text-white font-bold text-2xl">{stats.activeRequests || 0}</p>
+                  <p className="text-white font-bold text-xl md:text-2xl">{stats.activeRequests || 0}</p>
                 </div>
               </div>
             )}
@@ -452,7 +452,7 @@ export default function Emergency() {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">
           {/* Hospitals Section */}
           <div>
             <div className="flex items-center justify-between mb-4">
@@ -499,7 +499,7 @@ export default function Emergency() {
                 />
 
                 <p className="text-gray-400 text-sm mb-2">Bed Capacity:</p>
-                <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
                   <input
                     type="number"
                     placeholder="ICU Total"
@@ -612,7 +612,7 @@ export default function Emergency() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                       <div className="bg-gray-800 rounded p-2 text-center">
                         <p className="text-gray-400 text-xs">ICU</p>
                         <p className="text-white font-bold">{icuAvailable}</p>

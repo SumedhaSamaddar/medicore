@@ -94,16 +94,16 @@ Symptoms: ${symptoms}`
     <div className="flex bg-gray-950 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
         {/* Header */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-white">AI Symptom Checker</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-white">AI Symptom Checker</h2>
           <p className="text-gray-400">
             AI-powered triage assistant · Helps prioritize patient queue
           </p>
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {/* Left: Input */}
           <div className="col-span-2 space-y-4">
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
@@ -162,7 +162,7 @@ Symptoms: ${symptoms}`
             {result && (
               <div className={`border-2 rounded-xl p-6 ${priorityStyles[result.priority].box}`}>
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="text-3xl">
+                  <span className="text-xl md:text-2xl md:text-3xl">
                     {priorityStyles[result.priority].icon}
                   </span>
                   <div>

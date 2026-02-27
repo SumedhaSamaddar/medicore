@@ -10,12 +10,12 @@ export default function Analytics() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-white">Analytics</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white">Analytics</h2>
             <p className="text-gray-400">Business insights and performance</p>
           </div>
 
@@ -29,25 +29,25 @@ export default function Analytics() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-gray-400 text-sm">Total Revenue</p>
-            <h3 className="text-2xl font-bold text-white mt-1">₹2,45,000</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-white mt-1">₹2,45,000</h3>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-gray-400 text-sm">Transactions</p>
-            <h3 className="text-2xl font-bold text-white mt-1">312</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-white mt-1">312</h3>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-gray-400 text-sm">Expenses</p>
-            <h3 className="text-2xl font-bold text-white mt-1">₹78,000</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-white mt-1">₹78,000</h3>
           </div>
 
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-gray-400 text-sm">Net Profit</p>
-            <h3 className="text-2xl font-bold text-green-400 mt-1">₹1,67,000</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-green-400 mt-1">₹1,67,000</h3>
           </div>
         </div>
 

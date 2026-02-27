@@ -38,12 +38,12 @@ export default function Patients() {
     <div className="flex bg-gray-950 min-h-screen">
       <Sidebar />
 
-      <div className="ml-64 flex-1 p-8">
+      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl font-bold text-white">Patients</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-white">Patients</h2>
             <p className="text-gray-400">{patients.length} total patients</p>
           </div>
           <button
@@ -59,7 +59,7 @@ export default function Patients() {
         {showForm && (
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-6">
             <h3 className="text-white font-semibold mb-4">New Patient</h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { key: 'name', placeholder: 'Full Name', type: 'text' },
                 { key: 'age', placeholder: 'Age', type: 'number' },
@@ -112,8 +112,8 @@ export default function Patients() {
         </div>
 
         {/* Table */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-          <table className="w-full">
+        <div className="overflow-x-auto">
+  <table className="w-full min-w-[600px]">
             <thead className="bg-gray-800">
               <tr className="text-gray-400 text-sm">
                 <th className="text-left px-6 py-4">Name</th>
