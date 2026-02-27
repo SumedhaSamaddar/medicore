@@ -10,7 +10,7 @@ export default function Analytics() {
       <Sidebar />
 
       {/* Main Content */}
-      <div className="ml-0 md:ml-0 md:ml-64 flex-1 p-4 md:p-4 md:p-8 pt-16 md:pt-16 md:pt-8">
+      <div className="ml-0 md:ml-64 flex-1 p-4 md:p-8 pt-16 md:pt-8">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
