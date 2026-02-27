@@ -35,16 +35,14 @@ app.use('/api/analytics', require('./routes/analytics'))
 // ================= SERVE FRONTEND (PRODUCTION) =================
 // ================= SERVE FRONTEND (PRODUCTION) =================
 // ================= SERVE FRONTEND (PRODUCTION) =================
+const path = require('path')
+
+// Serve static frontend files in production
 if (process.env.NODE_ENV === 'production') {
-  // Your React build is in the root 'build' folder, not in frontend/build
-const buildPath = path.join(__dirname, '..', 'frontend', 'build')
-  
-  console.log('Serving static files from:', buildPath)
-  
+  const buildPath = path.join(__dirname, '../frontend/build')
   app.use(express.static(buildPath))
   
-app.get('/{*splat}', (req, res) => {
-    if (req.path.startsWith('/api')) return next()
+  app.get('*', (req, res) => {
     res.sendFile(path.join(buildPath, 'index.html'))
   })
 }
