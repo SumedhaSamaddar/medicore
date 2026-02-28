@@ -67,7 +67,7 @@ export const updateTransaction = (id, data) => API.put(`/transactions/${id}`, da
 export const deleteTransaction = (id) => API.delete(`/transactions/${id}`);
 
 // ========== AI ==========
-export const getAIPrediction = (data) => api.post('/ai/analyze-symptoms', data)
+export const getAIPrediction = (data) => API.post('/ai/analyze-symptoms', data)
 export const getAIAnalysis = (data) => API.post('/ai/analyze', data);
 
 // ========== EMERGENCY ==========
