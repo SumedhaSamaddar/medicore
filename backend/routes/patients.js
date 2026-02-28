@@ -4,7 +4,7 @@ const Patient = require('../models/Patient')
 const auth    = require('../middleware/protect')
 
 // GET all patients
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const patients = await Patient.find().sort({ createdAt: -1 })
     res.json(patients)
@@ -14,7 +14,7 @@ router.get('/', auth, async (req, res) => {
 })
 
 // GET one patient
-router.get('/:id', auth, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const patient = await Patient.findById(req.params.id)
     if (!patient) {
@@ -27,7 +27,7 @@ router.get('/:id', auth, async (req, res) => {
 })
 
 // POST create patient
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const patient = await Patient.create(req.body)
     res.json({ id: patient._id, message: 'Patient created' })
@@ -37,7 +37,7 @@ router.post('/', auth, async (req, res) => {
 })
 
 // PUT update patient
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     await Patient.findByIdAndUpdate(req.params.id, req.body)
     res.json({ message: 'Patient updated' })
@@ -47,7 +47,7 @@ router.put('/:id', auth, async (req, res) => {
 })
 
 // DELETE patient
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await Patient.findByIdAndDelete(req.params.id)
     res.json({ message: 'Patient deleted' })

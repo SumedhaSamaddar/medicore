@@ -4,7 +4,7 @@ const Invoice = require('../models/Invoice')
 const auth    = require('../middleware/protect')
 
 // GET all invoices
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const invoices = await Invoice.find()
       .populate('patient', 'name phone')
@@ -17,7 +17,7 @@ router.get('/', auth, async (req, res) => {
 })
 
 // POST create invoice
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const invoice = await Invoice.create(req.body)
     res.json({ id: invoice._id, message: 'Invoice created' })
@@ -27,7 +27,7 @@ router.post('/', auth, async (req, res) => {
 })
 
 // PUT mark as paid
-router.put('/:id/pay', auth, async (req, res) => {
+router.put('/:id/pay', async (req, res) => {
   try {
     await Invoice.findByIdAndUpdate(req.params.id, { status: 'Paid' })
     res.json({ message: 'Marked as paid' })
@@ -37,7 +37,7 @@ router.put('/:id/pay', auth, async (req, res) => {
 })
 
 // DELETE invoice
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await Invoice.findByIdAndDelete(req.params.id)
     res.json({ message: 'Invoice deleted' })

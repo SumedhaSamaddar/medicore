@@ -4,7 +4,7 @@ const Appointment = require('../models/Appointment')
 const auth    = require('../middleware/protect')
 
 // GET all appointments with patient + doctor names
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const appointments = await Appointment.find()
       .populate('patient', 'name phone')
@@ -17,7 +17,7 @@ router.get('/', auth, async (req, res) => {
 })
 
 // POST create appointment
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const appointment = await Appointment.create(req.body)
     res.json({ id: appointment._id, message: 'Appointment booked' })
@@ -27,7 +27,7 @@ router.post('/', auth, async (req, res) => {
 })
 
 // PUT update status
-router.put('/:id/status', auth, async (req, res) => {
+router.put('/:id/status', async (req, res) => {
   try {
     await Appointment.findByIdAndUpdate(
       req.params.id,
@@ -40,7 +40,7 @@ router.put('/:id/status', auth, async (req, res) => {
 })
 
 // DELETE appointment
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await Appointment.findByIdAndDelete(req.params.id)
     res.json({ message: 'Appointment deleted' })

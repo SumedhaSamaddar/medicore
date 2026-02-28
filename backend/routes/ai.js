@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const auth = require('../middleware/protect')
 
-router.post('/analyze-symptoms', auth, async (req, res) => {
+router.post('/analyze-symptoms', async (req, res) => {
   const { symptoms } = req.body
 
   if (!symptoms) {

@@ -4,7 +4,7 @@ const Medicine = require('../models/Medicine')
 const auth    = require('../middleware/protect')
 
 // GET all medicines
-router.get('/', auth, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const medicines = await Medicine.find().sort({ name: 1 })
     res.json(medicines)
@@ -14,7 +14,7 @@ router.get('/', auth, async (req, res) => {
 })
 
 // GET low stock
-router.get('/low-stock', auth, async (req, res) => {
+router.get('/low-stock', async (req, res) => {
   try {
     const medicines = await Medicine.find({
       $expr: { $lte: ['$quantity', '$threshold'] }
@@ -26,7 +26,7 @@ router.get('/low-stock', auth, async (req, res) => {
 })
 
 // POST add medicine
-router.post('/', auth, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const medicine = await Medicine.create(req.body)
     res.json({ id: medicine._id, message: 'Medicine added' })
@@ -36,7 +36,7 @@ router.post('/', auth, async (req, res) => {
 })
 
 // PUT update medicine
-router.put('/:id', auth, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     await Medicine.findByIdAndUpdate(req.params.id, req.body)
     res.json({ message: 'Medicine updated' })
@@ -46,7 +46,7 @@ router.put('/:id', auth, async (req, res) => {
 })
 
 // DELETE medicine
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     await Medicine.findByIdAndDelete(req.params.id)
     res.json({ message: 'Medicine deleted' })
