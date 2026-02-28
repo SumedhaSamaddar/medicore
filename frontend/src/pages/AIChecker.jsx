@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './AIChecker.css'; // Make sure this import exists
 
 const AIChecker = () => {
   const [symptoms, setSymptoms] = useState('');
@@ -15,32 +16,28 @@ const AIChecker = () => {
       case 'HIGH':
         return {
           label: 'CRITICAL',
-          color: '#ff4444',
-          bgColor: '#ffebee',
+          className: 'severity-critical',
           icon: '🔴',
           message: 'Emergency care needed immediately!'
         };
       case 'MEDIUM':
         return {
           label: 'HIGH',
-          color: '#ff8800',
-          bgColor: '#fff3e0',
+          className: 'severity-high',
           icon: '🟠',
           message: 'Visit doctor today'
         };
       case 'LOW':
         return {
           label: 'LOW',
-          color: '#00C851',
-          bgColor: '#e8f5e9',
+          className: 'severity-low',
           icon: '🟢',
           message: 'Monitor at home'
         };
       default:
         return {
           label: 'LOW',
-          color: '#00C851',
-          bgColor: '#e8f5e9',
+          className: 'severity-low',
           icon: '🟢',
           message: 'Monitor at home'
         };
@@ -74,7 +71,7 @@ const AIChecker = () => {
         {
           symptoms: symptoms,
           priority: data.priority,
-          time: new Date().toLocaleTimeString()
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         },
         ...prev.slice(0, 4)
       ]);
@@ -99,33 +96,35 @@ const AIChecker = () => {
   };
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>AI Symptom Checker</h1>
-      <p style={styles.subtitle}>AI-powered preliminary diagnosis assistant</p>
+    <div className="ai-checker-container">
+      <div className="ai-checker-header">
+        <h1>AI Symptom Checker</h1>
+        <p className="subtitle">AI-powered preliminary diagnosis assistant</p>
+      </div>
 
-      <div style={styles.mainContent}>
-        {/* Left Column - Input Form */}
-        <div style={styles.leftColumn}>
-          <div style={styles.patientInfo}>
+      <div className="ai-checker-content">
+        {/* Left Column */}
+        <div className="left-panel">
+          <div className="patient-info-card">
             <h3>Patient Information</h3>
             
-            <div style={styles.inputGroup}>
+            <div className="form-group">
               <label>Age</label>
               <input
                 type="number"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
                 placeholder="Enter age"
-                style={styles.input}
+                className="form-input"
               />
             </div>
 
-            <div style={styles.inputGroup}>
+            <div className="form-group">
               <label>Gender</label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                style={styles.select}
+                className="form-select"
               >
                 <option value="male">Male</option>
                 <option value="female">Female</option>
@@ -133,25 +132,25 @@ const AIChecker = () => {
               </select>
             </div>
 
-            <div style={styles.inputGroup}>
+            <div className="form-group">
               <label>Symptoms*</label>
               <textarea
                 value={symptoms}
                 onChange={(e) => setSymptoms(e.target.value)}
                 placeholder="Describe your symptoms (e.g., chest pain, fever, headache)"
                 rows="4"
-                style={styles.textarea}
+                className="form-textarea"
               />
             </div>
 
-            <div style={styles.quickAdd}>
-              <p style={styles.quickAddLabel}>Quick add:</p>
-              <div style={styles.symptomButtons}>
+            <div className="quick-add-section">
+              <p className="quick-add-label">Quick add:</p>
+              <div className="symptom-buttons">
                 {quickSymptoms.map((symptom) => (
                   <button
                     key={symptom}
                     onClick={() => addQuickSymptom(symptom)}
-                    style={styles.symptomButton}
+                    className="symptom-btn"
                   >
                     +{symptom}
                   </button>
@@ -159,18 +158,15 @@ const AIChecker = () => {
               </div>
             </div>
 
-            <div style={styles.actionButtons}>
+            <div className="action-buttons">
               <button
                 onClick={handleAnalyze}
                 disabled={loading}
-                style={{
-                  ...styles.analyzeButton,
-                  opacity: loading ? 0.7 : 1
-                }}
+                className="analyze-btn"
               >
                 {loading ? 'Analyzing...' : 'Analyze Symptoms'}
               </button>
-              <button onClick={clearAll} style={styles.clearButton}>
+              <button onClick={clearAll} className="clear-btn">
                 Clear
               </button>
             </div>
@@ -178,96 +174,82 @@ const AIChecker = () => {
 
           {/* Recent Checks */}
           {recentChecks.length > 0 && (
-            <div style={styles.recentChecks}>
+            <div className="recent-checks-card">
               <h3>Recent Checks</h3>
               {recentChecks.map((check, index) => (
-                <div key={index} style={styles.recentCheckItem}>
-                  <span style={{
-                    ...styles.priorityBadge,
-                    backgroundColor: getSeverityInfo(check.priority).color,
-                    color: 'white'
-                  }}>
+                <div key={index} className="recent-check-item">
+                  <span className={`priority-badge priority-${check.priority.toLowerCase()}`}>
                     {check.priority}
                   </span>
-                  <span style={styles.recentSymptom}>{check.symptoms}</span>
-                  <span style={styles.recentTime}>{check.time}</span>
+                  <span className="recent-symptom">{check.symptoms}</span>
+                  <span className="recent-time">{check.time}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Right Column - Results & Guide */}
-        <div style={styles.rightColumn}>
+        {/* Right Column */}
+        <div className="right-panel">
           {/* Severity Guide */}
-          <div style={styles.severityGuide}>
+          <div className="severity-guide-card">
             <h3>Severity Guide</h3>
-            <div style={styles.guideItem}>
-              <span style={{...styles.guideDot, backgroundColor: '#00C851'}}></span>
+            <div className="guide-item">
+              <span className="dot dot-low"></span>
               <span>Low: Monitor at home</span>
             </div>
-            <div style={styles.guideItem}>
-              <span style={{...styles.guideDot, backgroundColor: '#ffbb33'}}></span>
+            <div className="guide-item">
+              <span className="dot dot-medium"></span>
               <span>Medium: Schedule appointment</span>
             </div>
-            <div style={styles.guideItem}>
-              <span style={{...styles.guideDot, backgroundColor: '#ff8800'}}></span>
+            <div className="guide-item">
+              <span className="dot dot-high"></span>
               <span>High: Visit doctor today</span>
             </div>
-            <div style={styles.guideItem}>
-              <span style={{...styles.guideDot, backgroundColor: '#ff4444'}}></span>
+            <div className="guide-item">
+              <span className="dot dot-critical"></span>
               <span>Critical: Emergency care needed</span>
             </div>
           </div>
 
           {/* Analysis Result */}
           {result && (
-            <div style={styles.resultContainer}>
-              {/* Severity Banner - FIXED DISPLAY */}
-              <div style={{
-                backgroundColor: getSeverityInfo(result.priority).color,
-                padding: '20px',
-                borderRadius: '10px',
-                marginBottom: '20px',
-                textAlign: 'center'
-              }}>
-                <h2 style={{ color: 'white', margin: 0, fontSize: '24px' }}>
+            <div className="result-card">
+              {/* Severity Banner */}
+              <div className={`severity-banner ${getSeverityInfo(result.priority).className}`}>
+                <h2>
                   {getSeverityInfo(result.priority).icon} 
                   {getSeverityInfo(result.priority).label} SEVERITY
                 </h2>
-                <p style={{ color: 'white', margin: '10px 0 0 0', fontSize: '16px' }}>
-                  {getSeverityInfo(result.priority).message}
-                </p>
+                <p>{getSeverityInfo(result.priority).message}</p>
               </div>
 
-              <h3 style={styles.analysisTitle}>Analysis Complete</h3>
+              <h3 className="analysis-title">Analysis Complete</h3>
               
-              {/* Reason */}
-              <div style={styles.resultSection}>
+              {/* Assessment */}
+              <div className="result-section">
                 <strong>Assessment:</strong>
-                <p style={styles.resultText}>{result.reason}</p>
+                <p>{result.reason}</p>
               </div>
 
               {/* Possible Conditions */}
-              <div style={styles.resultSection}>
+              <div className="result-section">
                 <strong>Possible Conditions:</strong>
-                <ul style={styles.conditionList}>
+                <ul className="conditions-list">
                   {result.possibleConditions?.map((condition, index) => (
-                    <li key={index} style={styles.conditionItem}>
-                      • {condition}
-                    </li>
+                    <li key={index}>{condition}</li>
                   ))}
                 </ul>
               </div>
 
               {/* Recommendation */}
-              <div style={styles.resultSection}>
+              <div className="result-section">
                 <strong>Recommendation:</strong>
-                <p style={styles.resultText}>{result.recommendation}</p>
+                <p>{result.recommendation}</p>
               </div>
 
               {/* Disclaimer */}
-              <small style={styles.disclaimer}>
+              <small className="disclaimer">
                 This AI-based tool is not a substitute for professional medical advice. 
                 Always consult a healthcare provider for personalized guidance and treatment.
               </small>
@@ -277,193 +259,6 @@ const AIChecker = () => {
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif'
-  },
-  title: {
-    fontSize: '32px',
-    color: '#333',
-    marginBottom: '5px'
-  },
-  subtitle: {
-    fontSize: '14px',
-    color: '#666',
-    marginBottom: '30px'
-  },
-  mainContent: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '30px'
-  },
-  leftColumn: {
-    backgroundColor: '#f9f9f9',
-    padding: '20px',
-    borderRadius: '10px'
-  },
-  rightColumn: {
-    backgroundColor: '#f9f9f9',
-    padding: '20px',
-    borderRadius: '10px'
-  },
-  patientInfo: {
-    marginBottom: '20px'
-  },
-  inputGroup: {
-    marginBottom: '15px'
-  },
-  input: {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    fontSize: '14px'
-  },
-  select: {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    fontSize: '14px'
-  },
-  textarea: {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-    fontSize: '14px',
-    resize: 'vertical'
-  },
-  quickAdd: {
-    marginBottom: '20px'
-  },
-  quickAddLabel: {
-    fontSize: '14px',
-    fontWeight: 'bold',
-    marginBottom: '10px'
-  },
-  symptomButtons: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px'
-  },
-  symptomButton: {
-    padding: '8px 15px',
-    backgroundColor: '#e0e0e0',
-    border: 'none',
-    borderRadius: '20px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    ':hover': {
-      backgroundColor: '#d0d0d0'
-    }
-  },
-  actionButtons: {
-    display: 'flex',
-    gap: '10px'
-  },
-  analyzeButton: {
-    flex: 2,
-    padding: '12px',
-    backgroundColor: '#007bff',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
-    cursor: 'pointer'
-  },
-  clearButton: {
-    flex: 1,
-    padding: '12px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
-    cursor: 'pointer'
-  },
-  recentChecks: {
-    marginTop: '30px'
-  },
-  recentCheckItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px',
-    backgroundColor: 'white',
-    borderRadius: '5px',
-    marginBottom: '5px'
-  },
-  priorityBadge: {
-    padding: '3px 8px',
-    borderRadius: '3px',
-    fontSize: '12px',
-    fontWeight: 'bold'
-  },
-  recentSymptom: {
-    flex: 1,
-    fontSize: '14px'
-  },
-  recentTime: {
-    fontSize: '12px',
-    color: '#666'
-  },
-  severityGuide: {
-    backgroundColor: 'white',
-    padding: '15px',
-    borderRadius: '8px',
-    marginBottom: '20px'
-  },
-  guideItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '8px'
-  },
-  guideDot: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '50%',
-    display: 'inline-block'
-  },
-  resultContainer: {
-    backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '8px'
-  },
-  analysisTitle: {
-    fontSize: '20px',
-    marginBottom: '15px',
-    color: '#333'
-  },
-  resultSection: {
-    marginBottom: '15px'
-  },
-  resultText: {
-    margin: '5px 0 0 0',
-    color: '#555',
-    lineHeight: '1.5'
-  },
-  conditionList: {
-    margin: '5px 0 0 0',
-    paddingLeft: '20px'
-  },
-  conditionItem: {
-    marginBottom: '3px',
-    color: '#555'
-  },
-  disclaimer: {
-    display: 'block',
-    marginTop: '20px',
-    color: '#999',
-    fontSize: '11px',
-    textAlign: 'center'
-  }
 };
 
 export default AIChecker;
