@@ -1,93 +1,77 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const cors = require('cors')
-const path = require('path')
-require('dotenv').config()
-const app = express()
+// server.js
+require('dotenv').config(); // Load environment variables
+
+const express = require('express');
+const mongoose = require('mongoose');
+// Import your route modules (adjust paths as needed)
+// const userRoutes = require('./routes/userRoutes');
+// const openaiRoutes = require('./routes/openaiRoutes');
+
+const app = express();
+
 // Middleware
-app.use(cors())
-app.use(express.json())
-// API Routes
-app.use('/api/auth', require('./routes/auth'))
-app.use('/api/patients', require('./routes/patients'))
-app.use('/api/doctors', require('./routes/doctors'))
-app.use('/api/appointments', require('./routes/appointments'))
-app.use('/api/medicines', require('./routes/medicines'))
-app.use('/api/invoices', require('./routes/invoices'))
-app.use('/api/transactions', require('./routes/transaction'))
-app.use('/api/ai', require('./routes/ai'))  // AI Symptom Checker route
-app.use('/api/emergency', require('./routes/emergency'))
-app.use('/api/analytics', require('./routes/analytics'))
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    env: process.env.NODE_ENV || 'development'
-  })
-})
-// Serve frontend in production
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, '../frontend/build')
-  app.use(express.static(buildPath))
-  
-  app.use((req, res) => {
-    if (!req.path.startsWith('/api') && !req.path.startsWith('/health')) {
-      res.sendFile(path.join(buildPath, 'index.html'))
-    }
-  })
-}
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err.stack)
-  res.status(500).json({ 
-    error: 'Something went wrong!',
-    message: err.message 
-  })
-})
-// Connect to MongoDB and start server
-const PORT = process.env.PORT || 10000
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI
-if (!MONGODB_URI) {
-  console.error('❌ MongoDB URI not found in environment variables')
-  process.exit(1)
-}
-mongoose.connect(MONGODB_URI)
-  .then(() => {
-    console.log('✅ MongoDB connected successfully')
-    
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`✅ Server running on port ${PORT}`)
-      console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`)
-      console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present' : 'Missing'}`)
-      
-      // Log all registered routes
-      console.log('\n📋 Registered Routes:')
-      app._router.stack.forEach((r) => {
-        if (r.route && r.route.path) {
-          console.log(`   ${Object.keys(r.route.methods).join(', ').toUpperCase()} ${r.route.path}`)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ========== ROUTES ==========
+// Define all your routes HERE before starting the server
+
+// Example route
+app.get('/', (req, res) => {
+  res.send('Medicore API is running');
+});
+
+// Mount your actual route files (uncomment and adjust)
+// app.use('/api/users', userRoutes);
+// app.use('/api/openai', openaiRoutes);
+
+// ========== DATABASE CONNECTION ==========
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/medicore');
+    console.log('✅ MongoDB connected successfully');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1); // Exit if DB fails to connect
+  }
+};
+
+// ========== START SERVER ==========
+const PORT = process.env.PORT || 3000;
+
+// Start server only after DB is connected
+connectDB().then(() => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present' : 'Missing'}`);
+
+    // Safely log registered routes (only if _router exists)
+    if (app._router && app._router.stack) {
+      console.log('📋 Registered Routes:');
+      app._router.stack.forEach((layer) => {
+        if (layer.route && layer.route.path) {
+          console.log(`   ${Object.keys(layer.route.methods).join(', ').toUpperCase()} ${layer.route.path}`);
+        } else if (layer.name === 'router') { // mounted router
+          console.log(`   Router: ${layer.regexp}`);
         }
-      })
-    })
-  })
-  .catch(err => {
-    console.error('❌ MongoDB connection error:', err)
-    process.exit(1)
-  })
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, closing server...')
-  mongoose.connection.close(false, () => {
-    console.log('MongoDB connection closed')
-    process.exit(0)
-  })
-})
-process.on('SIGINT', () => {
-  console.log('SIGINT received, closing server...')
-  mongoose.connection.close(false, () => {
-    console.log('MongoDB connection closed')
-    process.exit(0)
-  })
-})
-module.exports = app
+      });
+    } else {
+      console.log('📋 No routes registered yet (app._router is undefined)');
+    }
+  });
+
+  // Handle graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, closing server...');
+    server.close(() => {
+      mongoose.connection.close(false).then(() => {
+        console.log('MongoDB connection closed');
+        process.exit(0);
+      });
+    });
+  });
+}).catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
+});
