@@ -1,16 +1,4 @@
-import { useState, useEffect } from "react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-
-const weekData = [
-  { day: "Mon", v: 0 }, { day: "Tue", v: 0 }, { day: "Wed", v: 0 },
-  { day: "Thu", v: 0 }, { day: "Fri", v: 0 }, { day: "Sat", v: 0 }, { day: "Sun", v: 0 },
-];
-const trendData = [
-  { m: "Sep", v: 0 }, { m: "Oct", v: 0 }, { m: "Nov", v: 0 },
-  { m: "Dec", v: 0 }, { m: "Jan", v: 0 }, { m: "Feb", v: 0 },
-];
-
-const CHIPS = ["Chest pain","Fever","Headache","Cough","Shortness of breath","Nausea","Fatigue","Dizziness"];
+import { useState } from "react";
 
 const PRIORITY = {
   HIGH:   { label: "EMERGENCY",  color: "#ef4444", bg: "#2a1215" },
@@ -18,195 +6,339 @@ const PRIORITY = {
   LOW:    { label: "NON-URGENT", color: "#10b981", bg: "#0d2018" },
 };
 
-function Clock() {
-  const [t, setT] = useState(new Date());
-  useEffect(() => { const id = setInterval(() => setT(new Date()), 1000); return () => clearInterval(id); }, []);
-  return (
-    <span style={{ fontSize: 22, fontWeight: 600, color: "#e2e8f0", letterSpacing: 1 }}>
-      {t.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-    </span>
-  );
-}
-
-const Card = ({ children, style }) => (
-  <div style={{ background: "#131929", border: "1px solid #1e2d40", borderRadius: 12, padding: "20px 22px", ...style }}>
-    {children}
-  </div>
-);
+const CHIPS = [
+  "Chest pain", "Fever", "Headache", "Cough", 
+  "Shortness of breath", "Nausea", "Fatigue", "Dizziness"
+];
 
 export default function AICheckerDashboard() {
   const [symptoms, setSymptoms] = useState("");
-  const [result, setResult]     = useState(null);
-  const [loading, setLoading]   = useState(false);
-  const [history, setHistory]   = useState([]);
-
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const analyze = async () => {
     if (!symptoms.trim()) return;
+    
     setLoading(true);
+    setError(null);
     setResult(null);
+    
     try {
-      const res  = await fetch("/api/analyze-symptoms", {
+      const response = await fetch("/api/analyze-symptoms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symptoms }),
       });
-      const data = await res.json();
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}`);
+      }
+      
+      const data = await response.json();
       setResult(data);
-      setHistory(h =>
-        [{ symptoms, ...data, time: new Date().toLocaleTimeString() }, ...h].slice(0, 10)
-      );
-    } catch {
-      setResult({ priority: "LOW", reason: "Connection error", recommendation: "Please try again.", possibleConditions: [] });
+    } catch (err) {
+      setError(err.message || "Failed to analyze symptoms. Please try again.");
+      console.error("Analysis error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const cfg    = result ? PRIORITY[result.priority] || PRIORITY.LOW : null;
-  const counts = {
-    HIGH:   history.filter(h => h.priority === "HIGH").length,
-    MEDIUM: history.filter(h => h.priority === "MEDIUM").length,
-    LOW:    history.filter(h => h.priority === "LOW").length,
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && e.ctrlKey) {
+      analyze();
+    }
   };
 
+  const priorityConfig = result ? PRIORITY[result.priority] || PRIORITY.LOW : null;
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0b0f1a", color: "#e2e8f0", fontFamily: "'DM Sans', sans-serif", padding: "28px 32px" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');*{box-sizing:border-box}textarea{resize:vertical}`}</style>
+    <div style={{ 
+      minHeight: "100vh", 
+      background: "#0b0f1a", 
+      color: "#e2e8f0", 
+      fontFamily: "'DM Sans', sans-serif",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "20px"
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; }
+        textarea { resize: vertical; }
+      `}</style>
 
-      {/* ── Header ── */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
-        <div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Dashboard</h1>
-          <p style={{ color: "#64748b", fontSize: 14, marginTop: 4 }}>{today}</p>
-        </div>
-        <Clock />
-      </div>
+      {/* Main Checker Card */}
+      <div style={{
+        background: "#131929",
+        border: "1px solid #1e2d40",
+        borderRadius: 16,
+        padding: "32px",
+        width: "100%",
+        maxWidth: "700px",
+        boxShadow: "0 20px 40px rgba(0,0,0,0.4)"
+      }}>
+        <h1 style={{ 
+          fontSize: 28, 
+          fontWeight: 700, 
+          margin: "0 0 8px 0",
+          background: "linear-gradient(135deg, #4f8ef7, #9f7aea)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent"
+        }}>
+          AI Symptom Checker
+        </h1>
+        <p style={{ color: "#64748b", fontSize: 14, marginBottom: 24 }}>
+          Describe your symptoms for an instant triage assessment
+        </p>
 
-      {/* ── Stat Cards ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 20 }}>
-        {[
-          { icon: "🩺", label: "Total Checks", value: history.length, color: "#4f8ef7" },
-          { icon: "🚨", label: "Emergency",    value: counts.HIGH,    color: "#ef4444" },
-          { icon: "⚠️", label: "Urgent",       value: counts.MEDIUM,  color: "#f59e0b" },
-          { icon: "✅", label: "Non-Urgent",   value: counts.LOW,     color: "#10b981" },
-        ].map(s => (
-          <Card key={s.label}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-              <span style={{ fontSize: 20 }}>{s.icon}</span>
-              <span style={{ fontSize: 14, color: "#94a3b8" }}>{s.label}</span>
-            </div>
-            <div style={{ fontSize: 36, fontWeight: 700, color: s.color }}>{s.value}</div>
-          </Card>
-        ))}
-      </div>
-
-      {/* ── Charts ── */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
-        <Card>
-          <p style={{ fontWeight: 600, marginBottom: 16 }}>Checks This Week</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={weekData}>
-              <CartesianGrid stroke="#1e2d40" strokeDasharray="4 4" />
-              <XAxis dataKey="day" stroke="#4a5568" tick={{ fontSize: 12, fill: "#4a5568" }} />
-              <YAxis stroke="#4a5568" tick={{ fontSize: 12, fill: "#4a5568" }} allowDecimals={false} />
-              <Line type="monotone" dataKey="v" stroke="#4f8ef7" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-        <Card>
-          <p style={{ fontWeight: 600, marginBottom: 16 }}>Severity Trend (₹)</p>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={trendData}>
-              <CartesianGrid stroke="#1e2d40" strokeDasharray="4 4" />
-              <XAxis dataKey="m" stroke="#4a5568" tick={{ fontSize: 12, fill: "#4a5568" }} />
-              <YAxis stroke="#4a5568" tick={{ fontSize: 12, fill: "#4a5568" }} allowDecimals={false} />
-              <Line type="monotone" dataKey="v" stroke="#10b981" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
-      </div>
-
-      {/* ── Symptom Input ── */}
-      <Card style={{ marginBottom: 20 }}>
-        <p style={{ fontWeight: 600, marginBottom: 14 }}>Check Symptoms</p>
-
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+        {/* Quick Symptom Chips */}
+        <div style={{ 
+          display: "flex", 
+          flexWrap: "wrap", 
+          gap: "8px", 
+          marginBottom: 20 
+        }}>
           {CHIPS.map(c => (
-            <button key={c} onClick={() => setSymptoms(p => p ? p + ", " + c : c)}
-              style={{ padding: "5px 14px", borderRadius: 99, border: "1px solid #1e2d40", background: "transparent", color: "#94a3b8", fontSize: 13, cursor: "pointer" }}>
+            <button
+              key={c}
+              onClick={() => setSymptoms(p => p ? p + ", " + c.toLowerCase() : c.toLowerCase())}
+              style={{
+                padding: "6px 16px",
+                borderRadius: 999,
+                border: "1px solid #1e2d40",
+                background: "#0b0f1a",
+                color: "#94a3b8",
+                fontSize: 13,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                hover: {
+                  background: "#1e2d40",
+                  color: "#e2e8f0"
+                }
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = "#1e2d40";
+                e.target.style.color = "#e2e8f0";
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = "#0b0f1a";
+                e.target.style.color = "#94a3b8";
+              }}
+            >
               {c}
             </button>
           ))}
         </div>
 
+        {/* Symptom Input */}
         <textarea
           value={symptoms}
-          onChange={e => setSymptoms(e.target.value)}
-          placeholder="Describe your symptoms…"
-          style={{ width: "100%", minHeight: 90, background: "#0b0f1a", border: "1px solid #1e2d40", borderRadius: 10, color: "#e2e8f0", fontSize: 14, padding: "12px 14px", outline: "none", fontFamily: "inherit" }}
+          onChange={(e) => setSymptoms(e.target.value)}
+          onKeyDown={handleKeyPress}
+          placeholder="Describe your symptoms in detail... (e.g., 'severe chest pain with shortness of breath')"
+          style={{
+            width: "100%",
+            minHeight: 120,
+            background: "#0b0f1a",
+            border: `1px solid ${error ? "#ef4444" : "#1e2d40"}`,
+            borderRadius: 12,
+            color: "#e2e8f0",
+            fontSize: 15,
+            padding: "16px",
+            outline: "none",
+            fontFamily: "inherit",
+            marginBottom: 16
+          }}
         />
 
+        {/* Analyze Button */}
         <button
           onClick={analyze}
           disabled={loading || !symptoms.trim()}
-          style={{ marginTop: 12, padding: "12px 28px", background: "#4f8ef7", border: "none", borderRadius: 8, color: "#fff", fontWeight: 600, fontSize: 14, cursor: "pointer", opacity: loading || !symptoms.trim() ? 0.5 : 1 }}>
-          {loading ? "Analyzing…" : "Analyze →"}
+          style={{
+            width: "100%",
+            padding: "14px",
+            background: loading ? "#64748b" : "#4f8ef7",
+            border: "none",
+            borderRadius: 10,
+            color: "#fff",
+            fontWeight: 600,
+            fontSize: 16,
+            cursor: loading || !symptoms.trim() ? "not-allowed" : "pointer",
+            opacity: loading || !symptoms.trim() ? 0.6 : 1,
+            transition: "background 0.2s",
+            marginBottom: 20
+          }}
+        >
+          {loading ? (
+            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+              <span style={{ 
+                display: "inline-block", 
+                width: 16, 
+                height: 16, 
+                border: "2px solid rgba(255,255,255,0.3)", 
+                borderTopColor: "#fff", 
+                borderRadius: "50%", 
+                animation: "spin 1s linear infinite" 
+              }} />
+              Analyzing...
+            </span>
+          ) : "Analyze Symptoms →"}
         </button>
 
-        {result && cfg && (
-          <div style={{ marginTop: 16, background: cfg.bg, border: `1px solid ${cfg.color}40`, borderRadius: 10, padding: "14px 18px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-              <span style={{ background: cfg.color, color: "#fff", fontSize: 12, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>{cfg.label}</span>
-              <span style={{ fontSize: 14, color: "#e2e8f0" }}>{result.recommendation}</span>
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            background: "#2a1215",
+            border: "1px solid #ef4444",
+            borderRadius: 10,
+            padding: "16px",
+            marginBottom: 20
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ color: "#ef4444", fontSize: 18 }}>⚠️</span>
+              <span style={{ color: "#ef4444", fontWeight: 600 }}>Error</span>
             </div>
-            <p style={{ fontSize: 13, color: "#64748b", marginBottom: 8 }}>{result.reason}</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {result.possibleConditions?.map(c => (
-                <span key={c} style={{ background: "#1e2d40", color: "#94a3b8", fontSize: 12, padding: "3px 10px", borderRadius: 6 }}>{c}</span>
-              ))}
+            <p style={{ color: "#e2e8f0", fontSize: 14, margin: 0 }}>{error}</p>
+          </div>
+        )}
+
+        {/* Result Display */}
+        {result && priorityConfig && (
+          <div style={{
+            background: priorityConfig.bg,
+            border: `1px solid ${priorityConfig.color}`,
+            borderRadius: 12,
+            padding: "20px",
+            animation: "fadeIn 0.3s ease-out"
+          }}>
+            {/* Priority Badge */}
+            <div style={{
+              display: "inline-block",
+              background: priorityConfig.color,
+              color: "#fff",
+              fontSize: 14,
+              fontWeight: 700,
+              padding: "4px 14px",
+              borderRadius: 20,
+              marginBottom: 16,
+              letterSpacing: "0.5px"
+            }}>
+              {priorityConfig.label}
+            </div>
+
+            {/* Recommendation */}
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{ 
+                fontSize: 18, 
+                fontWeight: 600, 
+                margin: "0 0 8px 0",
+                color: "#fff"
+              }}>
+                Recommendation
+              </h3>
+              <p style={{ 
+                fontSize: 15, 
+                color: "#e2e8f0", 
+                margin: 0,
+                lineHeight: 1.5
+              }}>
+                {result.recommendation}
+              </p>
+            </div>
+
+            {/* Reason */}
+            <div style={{ marginBottom: 16 }}>
+              <h3 style={{ 
+                fontSize: 16, 
+                fontWeight: 600, 
+                margin: "0 0 6px 0",
+                color: "#94a3b8"
+              }}>
+                Why
+              </h3>
+              <p style={{ 
+                fontSize: 14, 
+                color: "#94a3b8", 
+                margin: 0,
+                lineHeight: 1.5
+              }}>
+                {result.reason}
+              </p>
+            </div>
+
+            {/* Possible Conditions */}
+            {result.possibleConditions && result.possibleConditions.length > 0 && (
+              <div>
+                <h3 style={{ 
+                  fontSize: 14, 
+                  fontWeight: 600, 
+                  margin: "0 0 10px 0",
+                  color: "#64748b",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}>
+                  Possible Conditions
+                </h3>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {result.possibleConditions.map((condition, idx) => (
+                    <span
+                      key={idx}
+                      style={{
+                        background: "#1e2d40",
+                        color: "#94a3b8",
+                        fontSize: 13,
+                        padding: "4px 12px",
+                        borderRadius: 20,
+                        border: "1px solid #2d3a4f"
+                      }}
+                    >
+                      {condition}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Disclaimer */}
+            <div style={{
+              marginTop: 20,
+              paddingTop: 16,
+              borderTop: "1px solid #1e2d40",
+              fontSize: 12,
+              color: "#4a5568",
+              textAlign: "center"
+            }}>
+              This is an AI-powered triage tool. Not a substitute for professional medical advice.
+              {result.priority === "HIGH" && " ⚠️ SEEK EMERGENCY CARE IMMEDIATELY"}
             </div>
           </div>
         )}
-      </Card>
 
-      {/* ── Today's Queue ── */}
-      <Card>
-        <p style={{ fontWeight: 600, marginBottom: 14 }}>Today's Queue</p>
-        {history.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#4a5568", padding: "24px 0", fontSize: 14 }}>
-            No checks performed today
-          </p>
-        ) : (
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-            <thead>
-              <tr style={{ color: "#64748b", borderBottom: "1px solid #1e2d40" }}>
-                {["Time", "Symptoms", "Priority", "Recommendation"].map(h => (
-                  <th key={h} style={{ textAlign: "left", padding: "6px 10px", fontWeight: 500 }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {history.map((h, i) => {
-                const c = PRIORITY[h.priority] || PRIORITY.LOW;
-                return (
-                  <tr key={i} style={{ borderBottom: "1px solid #1e2d4050" }}>
-                    <td style={{ padding: "10px", color: "#64748b", whiteSpace: "nowrap" }}>{h.time}</td>
-                    <td style={{ padding: "10px", color: "#94a3b8", maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.symptoms}</td>
-                    <td style={{ padding: "10px" }}>
-                      <span style={{ background: c.color + "20", color: c.color, fontSize: 12, fontWeight: 600, padding: "3px 10px", borderRadius: 6 }}>{c.label}</span>
-                    </td>
-                    <td style={{ padding: "10px", color: "#94a3b8", fontSize: 13 }}>{h.recommendation}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
-      </Card>
+        {/* Keyboard Shortcut Hint */}
+        <div style={{
+          marginTop: 16,
+          fontSize: 12,
+          color: "#4a5568",
+          textAlign: "center"
+        }}>
+          Press Ctrl + Enter to analyze
+        </div>
+      </div>
+
+      {/* Animation Keyframes */}
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </div>
   );
 }
