@@ -1,4 +1,4 @@
-/ frontend/src/pages/Analytics.jsx
+// frontend/src/pages/Analytics.jsx
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import toast from 'react-hot-toast'
