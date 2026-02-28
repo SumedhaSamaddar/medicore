@@ -109,6 +109,53 @@ function analyzeLocally(symptoms, res) {
       possibleConditions: ['Common cold', 'Viral infection', 'Allergies']
     })
   }
+  // TEST ENDPOINT - Add this temporarily
+router.get('/debug-openai', async (req, res) => {
+  try {
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    // Test 1: Check if key exists
+    if (!apiKey) {
+      return res.json({ 
+        step: 1, 
+        status: 'FAILED', 
+        error: 'OPENAI_API_KEY not set in environment' 
+      });
+    }
+
+    // Test 2: Check key format
+    if (!apiKey.startsWith('sk-')) {
+      return res.json({ 
+        step: 2, 
+        status: 'FAILED', 
+        error: 'API key should start with sk-' 
+      });
+    }
+
+    // Test 3: Try simple API call
+    const response = await fetch('https://api.openai.com/v1/models', {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`
+      }
+    });
+
+    const data = await response.json();
+    
+    res.json({
+      step: 3,
+      status: response.ok ? 'WORKING' : 'FAILED',
+      statusCode: response.status,
+      data: data
+    });
+
+  } catch (error) {
+    res.json({ 
+      step: 4, 
+      status: 'ERROR', 
+      error: error.message 
+    });
+  }
+});
 }
 
 module.exports = router
