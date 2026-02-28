@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 // ========== DATABASE CONNECTION ==========
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/medicore');
+    await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/medicore');
     console.log('✅ MongoDB connected successfully');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
