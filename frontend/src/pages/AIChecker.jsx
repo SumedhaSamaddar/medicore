@@ -24,21 +24,42 @@ export default function AICheckerDashboard() {
     setError(null);
     setResult(null);
     
+    // Add timeout to prevent infinite loading
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     try {
+      console.log("Sending symptoms:", symptoms); // Debug log
+      
       const response = await fetch("/api/analyze-symptoms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symptoms }),
+        signal: controller.signal
       });
       
+      clearTimeout(timeoutId);
+      
+      console.log("Response status:", response.status); // Debug log
+      
       if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}`);
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
+        throw new Error(`Server error: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log("Response data:", data); // Debug log
+      
       setResult(data);
     } catch (err) {
-      setError(err.message || "Failed to analyze symptoms. Please try again.");
+      clearTimeout(timeoutId);
+      
+      if (err.name === 'AbortError') {
+        setError("Request timed out. Please check if the backend server is running.");
+      } else {
+        setError(err.message || "Failed to analyze symptoms. Please try again.");
+      }
       console.error("Analysis error:", err);
     } finally {
       setLoading(false);
@@ -113,11 +134,7 @@ export default function AICheckerDashboard() {
                 color: "#94a3b8",
                 fontSize: 13,
                 cursor: "pointer",
-                transition: "all 0.2s",
-                hover: {
-                  background: "#1e2d40",
-                  color: "#e2e8f0"
-                }
+                transition: "all 0.2s"
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = "#1e2d40";
@@ -170,24 +187,43 @@ export default function AICheckerDashboard() {
             cursor: loading || !symptoms.trim() ? "not-allowed" : "pointer",
             opacity: loading || !symptoms.trim() ? 0.6 : 1,
             transition: "background 0.2s",
-            marginBottom: 20
+            marginBottom: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px"
           }}
         >
           {loading ? (
-            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <>
               <span style={{ 
                 display: "inline-block", 
-                width: 16, 
-                height: 16, 
-                border: "2px solid rgba(255,255,255,0.3)", 
+                width: 20, 
+                height: 20, 
+                border: "3px solid rgba(255,255,255,0.3)", 
                 borderTopColor: "#fff", 
                 borderRadius: "50%", 
                 animation: "spin 1s linear infinite" 
               }} />
-              Analyzing...
-            </span>
+              Analyzing... (this may take a few seconds)
+            </>
           ) : "Analyze Symptoms →"}
         </button>
+
+        {/* Debug Info - Remove in production */}
+        {loading && (
+          <div style={{
+            background: "#1e2d40",
+            borderRadius: 8,
+            padding: "12px",
+            marginBottom: 16,
+            fontSize: 13,
+            color: "#94a3b8",
+            textAlign: "center"
+          }}>
+            ⚡ Connecting to backend at /api/analyze-symptoms...
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -200,9 +236,12 @@ export default function AICheckerDashboard() {
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
               <span style={{ color: "#ef4444", fontSize: 18 }}>⚠️</span>
-              <span style={{ color: "#ef4444", fontWeight: 600 }}>Error</span>
+              <span style={{ color: "#ef4444", fontWeight: 600 }}>Connection Error</span>
             </div>
-            <p style={{ color: "#e2e8f0", fontSize: 14, margin: 0 }}>{error}</p>
+            <p style={{ color: "#e2e8f0", fontSize: 14, margin: "0 0 8px 0" }}>{error}</p>
+            <p style={{ color: "#94a3b8", fontSize: 13, margin: 0 }}>
+              Make sure your backend server is running at the correct port.
+            </p>
           </div>
         )}
 
