@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 // const openaiRoutes = require('./routes/openaiRoutes');
 
 const app = express();
+const path = require('path');
 
 // Middleware
 app.use(express.json());
@@ -24,7 +25,10 @@ app.get('/', (req, res) => {
 // Mount your actual route files (uncomment and adjust)
 // app.use('/api/users', userRoutes);
 // app.use('/api/openai', openaiRoutes);
-
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+});
 // ========== DATABASE CONNECTION ==========
 const connectDB = async () => {
   try {
