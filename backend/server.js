@@ -2,7 +2,7 @@ require('dotenv').config(); // Load environment variables
 
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors'); // Added CORS
+const cors = require('cors');
 const path = require('path');
 
 // Import your route modules (uncomment when ready)
@@ -31,8 +31,8 @@ app.use(cors({
     }
     return callback(null, true);
   },
-  credentials: true, // Allow cookies/auth headers
-  optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 
 // ========== MIDDLEWARE ==========
@@ -57,22 +57,38 @@ app.get('/api/test', (req, res) => {
   });
 });
 
-// Mount your actual route files (uncomment when ready)
+// ========== API ROUTES ==========
+// Mount your actual route files here (uncomment when ready)
 // app.use('/api/users', userRoutes);
 // app.use('/api/openai', openaiRoutes);
 
 // ========== STATIC FILES (for production) ==========
-// Serve static files from the frontend build folder
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+// Only serve static files if the frontend build folder exists
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+const fs = require('fs');
 
-// Catch-all route to serve frontend for any non-API routes
-app.get('*', (req, res) => {
-  // Don't serve index.html for API routes
-  if (req.path.startsWith('/api/')) {
-    return res.status(404).json({ error: 'API endpoint not found' });
-  }
-  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-});
+if (fs.existsSync(frontendBuildPath)) {
+  console.log('✅ Serving static files from:', frontendBuildPath);
+  app.use(express.static(frontendBuildPath));
+  
+  // Catch-all route to serve frontend for any non-API routes
+  app.get('/*', (req, res) => {
+    // Don't serve index.html for API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    const indexPath = path.join(frontendBuildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: 'Frontend build not found' });
+    }
+  });
+} else {
+  console.log('⚠️ Frontend build folder not found at:', frontendBuildPath);
+  console.log('⚠️ API routes will work, but static files will not be served');
+}
 
 // ========== DATABASE CONNECTION ==========
 const connectDB = async () => {
@@ -82,53 +98,50 @@ const connectDB = async () => {
     console.log('✅ MongoDB connected successfully');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
+    // Don't exit process, just log error
+    console.log('⚠️ Continuing without database connection');
   }
 };
 
 // ========== START SERVER ==========
-const PORT = process.env.PORT || 5000; // Changed default to 5000 for consistency
+const PORT = process.env.PORT || 5000;
 
-// Start server only after DB is connected
-connectDB().then(() => {
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
-    console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
+// Start server (don't wait for DB to connect)
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
+  console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
+});
 
-    // Log registered routes
-    console.log('\n📋 Registered Routes:');
-    if (app._router && app._router.stack) {
-      app._router.stack.forEach((layer) => {
-        if (layer.route && layer.route.path) {
-          console.log(`   ${Object.keys(layer.route.methods).join(', ').toUpperCase()} ${layer.route.path}`);
-        }
+// Connect to DB after server starts
+connectDB();
+
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, closing server...');
+  server.close(() => {
+    if (mongoose.connection.readyState === 1) {
+      mongoose.connection.close(false).then(() => {
+        console.log('MongoDB connection closed');
+        process.exit(0);
       });
+    } else {
+      process.exit(0);
     }
   });
+});
 
-  // Handle graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, closing server...');
-    server.close(() => {
+process.on('SIGINT', () => {
+  console.log('SIGINT received, closing server...');
+  server.close(() => {
+    if (mongoose.connection.readyState === 1) {
       mongoose.connection.close(false).then(() => {
         console.log('MongoDB connection closed');
         process.exit(0);
       });
-    });
+    } else {
+      process.exit(0);
+    }
   });
-
-  process.on('SIGINT', () => {
-    console.log('SIGINT received, closing server...');
-    server.close(() => {
-      mongoose.connection.close(false).then(() => {
-        console.log('MongoDB connection closed');
-        process.exit(0);
-      });
-    });
-  });
-}).catch(err => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
 });
