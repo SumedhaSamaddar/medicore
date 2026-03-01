@@ -1,180 +1,54 @@
-require('dotenv').config(); // Load environment variables
+require('dotenv').config();
 
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const path = require('path');
-
-// ========== IMPORT ALL ROUTES ==========
-const patientRoutes = require('./routes/patients');
-const medicineRoutes = require('./routes/medicines');
-const invoiceRoutes = require('./routes/invoices');
-const appointmentRoutes = require('./routes/appointments');
-const analyticsRoutes = require('./routes/analytics');
-const aiRoutes = require('./routes/ai');
-const emergencyRoutes = require('./routes/emergency');
 
 const app = express();
 
-// ========== CORS CONFIGURATION ==========
-const allowedOrigins = [
-  'https://medicore-2.netlify.app',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://localhost:5000'
-];
-
+/* ================= MIDDLEWARE ================= */
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('Blocked origin:', origin);
-      callback(new Error('CORS not allowed from this origin'));
-    }
-  },
-  credentials: true,
-  optionsSuccessStatus: 200
+  origin: '*', // you can restrict later
+  credentials: true
 }));
-
-// ========== MIDDLEWARE ==========
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// ========== ROUTES ==========
-// Health check
+/* ================= HEALTH CHECK ================= */
 app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Medicore API is running',
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    endpoints: {
-      patients: '/api/patients',
-      medicines: '/api/medicines',
-      invoices: '/api/invoices',
-      appointments: '/api/appointments',
-      analytics: '/api/analytics',
-      ai: '/api/ai',
-      emergency: '/api/emergency'
-    }
-  });
+  res.send('MedicoRe API Running 🚀');
 });
 
-// Test route
-app.get('/api/test', (req, res) => {
-  res.json({ 
-    message: 'API is working!',
-    origin: req.headers.origin 
-  });
-});
+/* ================= DATABASE ================= */
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB error:', err));
 
-// ========== API ROUTES ==========
-// Core medical routes
-app.use('/api/patients', patientRoutes);
-app.use('/api/medicines', medicineRoutes);
-app.use('/api/invoices', invoiceRoutes);
-app.use('/api/appointments', appointmentRoutes);
+/* ================= ROUTES ================= */
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/patients', require('./routes/patients'));
+app.use('/api/appointments', require('./routes/appointments'));
+app.use('/api/doctors', require('./routes/doctors'));
+app.use('/api/medicines', require('./routes/medicines'));
+app.use('/api/invoices', require('./routes/invoices'));
+app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/analytics', require('./routes/analytics'));
+app.use('/api/emergency', require('./routes/emergency'));
 
-// Analytics and AI routes
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/ai', aiRoutes);
-app.use('/api/emergency', emergencyRoutes);
+/* 🔥 AI ROUTE — IMPORTANT */
+app.use('/api/ai', require('./routes/ai'));
 
-// ========== ERROR HANDLING ==========
-// 404 handler for undefined routes - FIXED: removed the '*'
+/* ================= 404 HANDLER ================= */
 app.use((req, res) => {
-  res.status(404).json({ 
+  res.status(404).json({
     message: 'Route not found',
     path: req.originalUrl,
     method: req.method
   });
 });
 
-// ========== DATABASE CONNECTION ==========
-const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/medicore';
-    await mongoose.connect(mongoURI);
-    console.log('✅ MongoDB connected successfully');
-    
-    // Log all registered models
-    console.log('📊 Registered Models:', Object.keys(mongoose.models).join(', '));
-  } catch (err) {
-    console.error('❌ MongoDB connection error:', err);
-    console.log('⚠️ Continuing without database connection');
-  }
-};
-
-// ========== START SERVER ==========
+/* ================= SERVER ================= */
 const PORT = process.env.PORT || 5000;
 
-// Start server immediately, don't wait for DB
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
-  console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
-  
-  console.log('\n📋 Registered Routes:');
-  console.log('   ┌─ Core Medical Routes');
-  console.log('   ├── /api/patients');
-  console.log('   ├── /api/medicines');
-  console.log('   ├── /api/invoices');
-  console.log('   └── /api/appointments');
-  console.log('   │');
-  console.log('   ├─ Analytics Routes');
-  console.log('   ├── /api/analytics/analytics');
-  console.log('   ├── /api/analytics/performance');
-  console.log('   ├── /api/analytics/clinics');
-  console.log('   ├── /api/analytics/ai-predict');
-  console.log('   └── /api/analytics/ai-insights');
-  console.log('   │');
-  console.log('   ├─ AI Symptom Checker Routes');
-  console.log('   ├── /api/ai/analyze-symptoms');
-  console.log('   ├── /api/ai/analyze-symptoms-fallback');
-  console.log('   ├── /api/ai/status');
-  console.log('   ├── /api/ai/test-openai');
-  console.log('   └── /api/ai/emergency-keywords');
-  console.log('   │');
-  console.log('   ├─ Emergency Services Routes');
-  console.log('   ├── /api/emergency/hospitals');
-  console.log('   ├── /api/emergency/ambulances');
-  console.log('   ├── /api/emergency/requests');
-  console.log('   ├── /api/emergency/assess');
-  console.log('   └── /api/emergency/stats');
-  console.log('   │');
-  console.log('   └─ 404 Handler: All undefined routes');
-});
-
-// Connect to DB after server starts
-connectDB();
-
-// ========== GRACEFUL SHUTDOWN ==========
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, closing server...');
-  server.close(() => {
-    if (mongoose.connection.readyState === 1) {
-      mongoose.connection.close(false).then(() => {
-        console.log('MongoDB connection closed');
-        process.exit(0);
-      });
-    } else {
-      process.exit(0);
-    }
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, closing server...');
-  server.close(() => {
-    if (mongoose.connection.readyState === 1) {
-      mongoose.connection.close(false).then(() => {
-        console.log('MongoDB connection closed');
-        process.exit(0);
-      });
-    } else {
-      process.exit(0);
-    }
-  });
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
