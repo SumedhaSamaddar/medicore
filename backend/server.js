@@ -5,17 +5,20 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 
-// Import your route modules (uncomment when ready)
-// const userRoutes = require('./routes/userRoutes');
-// const openaiRoutes = require('./routes/openaiRoutes');
+// ========== IMPORT ALL ROUTES ==========
+const patientRoutes = require('./routes/patients');
+const medicineRoutes = require('./routes/medicines');
+const invoiceRoutes = require('./routes/invoices');
+const appointmentRoutes = require('./routes/appointments');
+const analyticsRoutes = require('./routes/analytics');  // New
+const aiRoutes = require('./routes/ai');                // New
+const emergencyRoutes = require('./routes/emergency');  // New
 
 const app = express();
 
 // ========== CORS CONFIGURATION ==========
-// Allow requests from your Netlify frontend
-// ========== CORS CONFIGURATION ==========
 const allowedOrigins = [
-  'https://medicore-2.netlify.app', // Your NEW Netlify URL
+  'https://medicore-2.netlify.app', // Your Netlify URL
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5000'
@@ -23,14 +26,13 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'CORS policy does not allow access from this origin.';
-      return callback(new Error(msg), false);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('Blocked origin:', origin);
+      callback(new Error('CORS not allowed from this origin'));
     }
-    return callback(null, true);
   },
   credentials: true,
   optionsSuccessStatus: 200
@@ -41,55 +43,53 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ========== ROUTES ==========
-// Health check route
+// Health check
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Medicore API is running',
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      patients: '/api/patients',
+      medicines: '/api/medicines',
+      invoices: '/api/invoices',
+      appointments: '/api/appointments',
+      analytics: '/api/analytics',
+      ai: '/api/ai',
+      emergency: '/api/emergency'
+    }
   });
 });
 
-// Test route to verify CORS is working
+// Test route
 app.get('/api/test', (req, res) => {
   res.json({ 
-    message: 'CORS is working correctly!',
-    origin: req.headers.origin || 'No origin'
+    message: 'API is working!',
+    origin: req.headers.origin 
   });
 });
 
 // ========== API ROUTES ==========
-// Mount your actual route files here (uncomment when ready)
-// app.use('/api/users', userRoutes);
-// app.use('/api/openai', openaiRoutes);
+// Core medical routes
+app.use('/api/patients', patientRoutes);
+app.use('/api/medicines', medicineRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
-// ========== STATIC FILES (for production) ==========
-// Only serve static files if the frontend build folder exists
-const frontendBuildPath = path.join(__dirname, '../frontend/build');
-const fs = require('fs');
+// Analytics and AI routes
+app.use('/api/analytics', analyticsRoutes);  // Will handle /analytics/analytics, /analytics/performance, etc.
+app.use('/api/ai', aiRoutes);                 // Will handle /ai/analyze-symptoms, /ai/status, etc.
+app.use('/api/emergency', emergencyRoutes);   // Will handle /emergency/hospitals, /emergency/ambulances, etc.
 
-if (fs.existsSync(frontendBuildPath)) {
-  console.log('✅ Serving static files from:', frontendBuildPath);
-  app.use(express.static(frontendBuildPath));
-  
-  // Catch-all route to serve frontend for any non-API routes
-  app.get('/*', (req, res) => {
-    // Don't serve index.html for API routes
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ error: 'API endpoint not found' });
-    }
-    
-    const indexPath = path.join(frontendBuildPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      res.status(404).json({ error: 'Frontend build not found' });
-    }
+// ========== ERROR HANDLING ==========
+// 404 handler for undefined routes
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    message: 'Route not found',
+    path: req.originalUrl,
+    method: req.method
   });
-} else {
-  console.log('⚠️ Frontend build folder not found at:', frontendBuildPath);
-  console.log('⚠️ API routes will work, but static files will not be served');
-}
+});
 
 // ========== DATABASE CONNECTION ==========
 const connectDB = async () => {
@@ -97,9 +97,11 @@ const connectDB = async () => {
     const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/medicore';
     await mongoose.connect(mongoURI);
     console.log('✅ MongoDB connected successfully');
+    
+    // Log all registered models
+    console.log('📊 Registered Models:', Object.keys(mongoose.models).join(', '));
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
-    // Don't exit process, just log error
     console.log('⚠️ Continuing without database connection');
   }
 };
@@ -107,42 +109,61 @@ const connectDB = async () => {
 // ========== START SERVER ==========
 const PORT = process.env.PORT || 5000;
 
-// Start server (don't wait for DB to connect)
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
-  console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
-});
+connectDB().then(() => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
+    console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
+    
+    console.log('\n📋 Registered Routes:');
+    console.log('   ┌─ Core Medical Routes');
+    console.log('   ├── GET/POST  /api/patients');
+    console.log('   ├── GET/POST  /api/medicines');
+    console.log('   ├── GET/POST  /api/invoices');
+    console.log('   ├── GET/POST  /api/appointments');
+    console.log('   │');
+    console.log('   ├─ Analytics Routes');
+    console.log('   ├── GET       /api/analytics/analytics');
+    console.log('   ├── GET       /api/analytics/performance');
+    console.log('   ├── GET       /api/analytics/clinics');
+    console.log('   ├── POST      /api/analytics/ai-predict');
+    console.log('   └── POST      /api/analytics/ai-insights');
+    console.log('   │');
+    console.log('   ├─ AI Symptom Checker Routes');
+    console.log('   ├── POST      /api/ai/analyze-symptoms');
+    console.log('   ├── POST      /api/ai/analyze-symptoms-fallback');
+    console.log('   ├── GET       /api/ai/status');
+    console.log('   ├── GET       /api/ai/test-openai');
+    console.log('   └── GET       /api/ai/emergency-keywords');
+    console.log('   │');
+    console.log('   ├─ Emergency Services Routes');
+    console.log('   ├── GET/POST  /api/emergency/hospitals');
+    console.log('   ├── GET/POST  /api/emergency/ambulances');
+    console.log('   ├── GET/POST  /api/emergency/requests');
+    console.log('   ├── POST      /api/emergency/assess');
+    console.log('   └── GET       /api/emergency/stats');
+  });
 
-// Connect to DB after server starts
-connectDB();
-
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, closing server...');
-  server.close(() => {
-    if (mongoose.connection.readyState === 1) {
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM received, closing server...');
+    server.close(() => {
       mongoose.connection.close(false).then(() => {
-        console.log('MongoDB connection closed');
         process.exit(0);
       });
-    } else {
-      process.exit(0);
-    }
+    });
   });
-});
 
-process.on('SIGINT', () => {
-  console.log('SIGINT received, closing server...');
-  server.close(() => {
-    if (mongoose.connection.readyState === 1) {
+  process.on('SIGINT', () => {
+    console.log('SIGINT received, closing server...');
+    server.close(() => {
       mongoose.connection.close(false).then(() => {
-        console.log('MongoDB connection closed');
         process.exit(0);
       });
-    } else {
-      process.exit(0);
-    }
+    });
   });
+}).catch(err => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });
