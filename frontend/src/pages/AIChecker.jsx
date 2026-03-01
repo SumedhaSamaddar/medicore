@@ -24,14 +24,14 @@ export default function AICheckerDashboard() {
     setError(null);
     setResult(null);
     
-    // Add timeout to prevent infinite loading
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
     
     try {
-      console.log("Sending symptoms:", symptoms); // Debug log
+      console.log("Sending symptoms:", symptoms);
       
-      const response = await fetch("/api/analyze-symptoms", {
+      // ✅ FIXED: Correct endpoint with /ai/ prefix
+      const response = await fetch("/api/ai/analyze-symptoms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symptoms }),
@@ -40,7 +40,7 @@ export default function AICheckerDashboard() {
       
       clearTimeout(timeoutId);
       
-      console.log("Response status:", response.status); // Debug log
+      console.log("Response status:", response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -49,7 +49,7 @@ export default function AICheckerDashboard() {
       }
       
       const data = await response.json();
-      console.log("Response data:", data); // Debug log
+      console.log("Response data:", data);
       
       setResult(data);
     } catch (err) {
@@ -60,6 +60,36 @@ export default function AICheckerDashboard() {
       } else {
         setError(err.message || "Failed to analyze symptoms. Please try again.");
       }
+      console.error("Analysis error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback function if OpenAI is not configured
+  const analyzeWithFallback = async () => {
+    if (!symptoms.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    
+    try {
+      // Using the fallback endpoint that doesn't require OpenAI
+      const response = await fetch("/api/ai/analyze-symptoms-fallback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError(err.message || "Failed to analyze symptoms. Please try again.");
       console.error("Analysis error:", err);
     } finally {
       setLoading(false);
@@ -210,7 +240,7 @@ export default function AICheckerDashboard() {
           ) : "Analyze Symptoms →"}
         </button>
 
-        {/* Debug Info - Remove in production */}
+        {/* Debug Info */}
         {loading && (
           <div style={{
             background: "#1e2d40",
@@ -221,7 +251,7 @@ export default function AICheckerDashboard() {
             color: "#94a3b8",
             textAlign: "center"
           }}>
-            ⚡ Connecting to backend at /api/analyze-symptoms...
+            ⚡ Connecting to backend at /api/ai/analyze-symptoms...
           </div>
         )}
 
@@ -380,4 +410,4 @@ export default function AICheckerDashboard() {
       `}</style>
     </div>
   );
-}
+}s
