@@ -11,6 +11,9 @@ const CHIPS = [
   "Shortness of breath", "Nausea", "Fatigue", "Dizziness"
 ];
 
+// API URL - point directly to Railway backend
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://medicore-production-e189.up.railway.app';
+
 export default function AICheckerDashboard() {
   const [symptoms, setSymptoms] = useState("");
   const [result, setResult] = useState(null);
@@ -30,7 +33,8 @@ export default function AICheckerDashboard() {
     try {
       console.log("Sending symptoms:", symptoms);
       
-      const response = await fetch("/api/ai/analyze-symptoms", {
+      // Use full Railway URL
+      const response = await fetch(`${API_BASE_URL}/api/ai/analyze-symptoms`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symptoms }),
@@ -59,6 +63,35 @@ export default function AICheckerDashboard() {
       } else {
         setError(err.message || "Failed to analyze symptoms. Please try again.");
       }
+      console.error("Analysis error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fallback function using the non-OpenAI endpoint
+  const analyzeWithFallback = async () => {
+    if (!symptoms.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/ai/analyze-symptoms-fallback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symptoms })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      setError(err.message || "Failed to analyze symptoms. Please try again.");
       console.error("Analysis error:", err);
     } finally {
       setLoading(false);
@@ -209,6 +242,35 @@ export default function AICheckerDashboard() {
           ) : "Analyze Symptoms →"}
         </button>
 
+        {/* Fallback Button - in case OpenAI isn't configured */}
+        {!loading && !result && !error && (
+          <button
+            onClick={analyzeWithFallback}
+            style={{
+              width: "100%",
+              padding: "10px",
+              background: "transparent",
+              border: "1px solid #1e2d40",
+              borderRadius: 10,
+              color: "#94a3b8",
+              fontSize: 14,
+              cursor: "pointer",
+              marginBottom: 20,
+              transition: "all 0.2s"
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = "#1e2d40";
+              e.target.style.color = "#e2e8f0";
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = "transparent";
+              e.target.style.color = "#94a3b8";
+            }}
+          >
+            Use Fallback Mode (No AI required)
+          </button>
+        )}
+
         {/* Debug Info */}
         {loading && (
           <div style={{
@@ -220,7 +282,7 @@ export default function AICheckerDashboard() {
             color: "#94a3b8",
             textAlign: "center"
           }}>
-            ⚡ Connecting to backend at /api/ai/analyze-symptoms...
+            ⚡ Connecting to Railway backend: {API_BASE_URL}
           </div>
         )}
 
@@ -239,7 +301,7 @@ export default function AICheckerDashboard() {
             </div>
             <p style={{ color: "#e2e8f0", fontSize: 14, margin: "0 0 8px 0" }}>{error}</p>
             <p style={{ color: "#94a3b8", fontSize: 13, margin: 0 }}>
-              Make sure your backend server is running at the correct port.
+              Make sure your Railway backend is running at: {API_BASE_URL}
             </p>
           </div>
         )}
