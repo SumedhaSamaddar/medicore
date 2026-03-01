@@ -32,7 +32,7 @@ app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/doctors', require('./routes/doctors'));
 app.use('/api/medicines', require('./routes/medicines'));
 app.use('/api/invoices', require('./routes/invoices'));
-app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/transactions', require('./routes/transaction'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/emergency', require('./routes/emergency'));
 
