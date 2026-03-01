@@ -10,15 +10,15 @@ const patientRoutes = require('./routes/patients');
 const medicineRoutes = require('./routes/medicines');
 const invoiceRoutes = require('./routes/invoices');
 const appointmentRoutes = require('./routes/appointments');
-const analyticsRoutes = require('./routes/analytics');  // New
-const aiRoutes = require('./routes/ai');                // New
-const emergencyRoutes = require('./routes/emergency');  // New
+const analyticsRoutes = require('./routes/analytics');
+const aiRoutes = require('./routes/ai');
+const emergencyRoutes = require('./routes/emergency');
 
 const app = express();
 
 // ========== CORS CONFIGURATION ==========
 const allowedOrigins = [
-  'https://medicore-2.netlify.app', // Your Netlify URL
+  'https://medicore-2.netlify.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:5000'
@@ -77,13 +77,13 @@ app.use('/api/invoices', invoiceRoutes);
 app.use('/api/appointments', appointmentRoutes);
 
 // Analytics and AI routes
-app.use('/api/analytics', analyticsRoutes);  // Will handle /analytics/analytics, /analytics/performance, etc.
-app.use('/api/ai', aiRoutes);                 // Will handle /ai/analyze-symptoms, /ai/status, etc.
-app.use('/api/emergency', emergencyRoutes);   // Will handle /emergency/hospitals, /emergency/ambulances, etc.
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/emergency', emergencyRoutes);
 
 // ========== ERROR HANDLING ==========
-// 404 handler for undefined routes
-app.use('*', (req, res) => {
+// 404 handler for undefined routes - FIXED: removed the '*'
+app.use((req, res) => {
   res.status(404).json({ 
     message: 'Route not found',
     path: req.originalUrl,
@@ -109,61 +109,72 @@ const connectDB = async () => {
 // ========== START SERVER ==========
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
-  const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
-    console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
-    
-    console.log('\n📋 Registered Routes:');
-    console.log('   ┌─ Core Medical Routes');
-    console.log('   ├── GET/POST  /api/patients');
-    console.log('   ├── GET/POST  /api/medicines');
-    console.log('   ├── GET/POST  /api/invoices');
-    console.log('   ├── GET/POST  /api/appointments');
-    console.log('   │');
-    console.log('   ├─ Analytics Routes');
-    console.log('   ├── GET       /api/analytics/analytics');
-    console.log('   ├── GET       /api/analytics/performance');
-    console.log('   ├── GET       /api/analytics/clinics');
-    console.log('   ├── POST      /api/analytics/ai-predict');
-    console.log('   └── POST      /api/analytics/ai-insights');
-    console.log('   │');
-    console.log('   ├─ AI Symptom Checker Routes');
-    console.log('   ├── POST      /api/ai/analyze-symptoms');
-    console.log('   ├── POST      /api/ai/analyze-symptoms-fallback');
-    console.log('   ├── GET       /api/ai/status');
-    console.log('   ├── GET       /api/ai/test-openai');
-    console.log('   └── GET       /api/ai/emergency-keywords');
-    console.log('   │');
-    console.log('   ├─ Emergency Services Routes');
-    console.log('   ├── GET/POST  /api/emergency/hospitals');
-    console.log('   ├── GET/POST  /api/emergency/ambulances');
-    console.log('   ├── GET/POST  /api/emergency/requests');
-    console.log('   ├── POST      /api/emergency/assess');
-    console.log('   └── GET       /api/emergency/stats');
-  });
+// Start server immediately, don't wait for DB
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🌐 CORS enabled for: ${allowedOrigins.join(', ')}`);
+  console.log(`🤖 OpenAI API Key: ${process.env.OPENAI_API_KEY ? 'Present ✓' : 'Missing ✗'}`);
+  
+  console.log('\n📋 Registered Routes:');
+  console.log('   ┌─ Core Medical Routes');
+  console.log('   ├── /api/patients');
+  console.log('   ├── /api/medicines');
+  console.log('   ├── /api/invoices');
+  console.log('   └── /api/appointments');
+  console.log('   │');
+  console.log('   ├─ Analytics Routes');
+  console.log('   ├── /api/analytics/analytics');
+  console.log('   ├── /api/analytics/performance');
+  console.log('   ├── /api/analytics/clinics');
+  console.log('   ├── /api/analytics/ai-predict');
+  console.log('   └── /api/analytics/ai-insights');
+  console.log('   │');
+  console.log('   ├─ AI Symptom Checker Routes');
+  console.log('   ├── /api/ai/analyze-symptoms');
+  console.log('   ├── /api/ai/analyze-symptoms-fallback');
+  console.log('   ├── /api/ai/status');
+  console.log('   ├── /api/ai/test-openai');
+  console.log('   └── /api/ai/emergency-keywords');
+  console.log('   │');
+  console.log('   ├─ Emergency Services Routes');
+  console.log('   ├── /api/emergency/hospitals');
+  console.log('   ├── /api/emergency/ambulances');
+  console.log('   ├── /api/emergency/requests');
+  console.log('   ├── /api/emergency/assess');
+  console.log('   └── /api/emergency/stats');
+  console.log('   │');
+  console.log('   └─ 404 Handler: All undefined routes');
+});
 
-  // Graceful shutdown
-  process.on('SIGTERM', () => {
-    console.log('SIGTERM received, closing server...');
-    server.close(() => {
+// Connect to DB after server starts
+connectDB();
+
+// ========== GRACEFUL SHUTDOWN ==========
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, closing server...');
+  server.close(() => {
+    if (mongoose.connection.readyState === 1) {
       mongoose.connection.close(false).then(() => {
+        console.log('MongoDB connection closed');
         process.exit(0);
       });
-    });
+    } else {
+      process.exit(0);
+    }
   });
+});
 
-  process.on('SIGINT', () => {
-    console.log('SIGINT received, closing server...');
-    server.close(() => {
+process.on('SIGINT', () => {
+  console.log('SIGINT received, closing server...');
+  server.close(() => {
+    if (mongoose.connection.readyState === 1) {
       mongoose.connection.close(false).then(() => {
+        console.log('MongoDB connection closed');
         process.exit(0);
       });
-    });
+    } else {
+      process.exit(0);
+    }
   });
-}).catch(err => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
 });
