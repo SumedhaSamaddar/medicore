@@ -13,11 +13,12 @@ const app = express();
 
 // ========== CORS CONFIGURATION ==========
 // Allow requests from your Netlify frontend
+// ========== CORS CONFIGURATION ==========
 const allowedOrigins = [
-  'https://69a38e26e83754d478af317c--ephemeral-creponne-6b5b66.netlify.app',
-  'http://localhost:5173', // Vite default
-  'http://localhost:3000', // Create React App default
-  'http://localhost:5000'  // Local backend
+  'https://medicore-2.netlify.app', // Your NEW Netlify URL
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://localhost:5000'
 ];
 
 app.use(cors({
