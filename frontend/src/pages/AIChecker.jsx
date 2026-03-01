@@ -30,7 +30,6 @@ export default function AICheckerDashboard() {
     try {
       console.log("Sending symptoms:", symptoms);
       
-      // ✅ FIXED: Correct endpoint with /ai/ prefix
       const response = await fetch("/api/ai/analyze-symptoms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -60,36 +59,6 @@ export default function AICheckerDashboard() {
       } else {
         setError(err.message || "Failed to analyze symptoms. Please try again.");
       }
-      console.error("Analysis error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fallback function if OpenAI is not configured
-  const analyzeWithFallback = async () => {
-    if (!symptoms.trim()) return;
-    
-    setLoading(true);
-    setError(null);
-    setResult(null);
-    
-    try {
-      // Using the fallback endpoint that doesn't require OpenAI
-      const response = await fetch("/api/ai/analyze-symptoms-fallback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ symptoms })
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      setResult(data);
-    } catch (err) {
-      setError(err.message || "Failed to analyze symptoms. Please try again.");
       console.error("Analysis error:", err);
     } finally {
       setLoading(false);
@@ -410,4 +379,4 @@ export default function AICheckerDashboard() {
       `}</style>
     </div>
   );
-}s
+}
