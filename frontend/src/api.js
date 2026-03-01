@@ -2,12 +2,7 @@ import axios from 'axios';
 
 // Dynamically set baseURL based on environment
 const getBaseURL = () => {
-  // In production (Render), use relative path
-  if (process.env.NODE_ENV === 'production') {
-    return '/api';
-  }
-  // In development, use localhost
-  return 'http://localhost:5000/api';
+  return process.env.REACT_APP_API_URL;
 };
 
 const API = axios.create({ 
