@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import toast from 'react-hot-toast'
-import { getAppointments, createAppointment, updateAppointment, getDoctors } from '../api'
+import { getAppointments, createAppointment, updateAppointment, getDoctors, getPatients } from '../api'
 
 const statusColors = {
   'Waiting':     'bg-yellow-900 text-yellow-400',
@@ -14,6 +14,7 @@ const statusColors = {
 export default function Appointments() {
   const [appointments, setAppointments] = useState([])
   const [doctors, setDoctors]           = useState([])
+  const [patients, setPatients]         = useState([])
   const [loading, setLoading]           = useState(true)
   const [saving, setSaving]             = useState(false)
   const [showForm, setShowForm]         = useState(false)
@@ -23,12 +24,14 @@ export default function Appointments() {
   const fetchAll = async () => {
     try {
       setLoading(true)
-      const [apptRes, docRes] = await Promise.allSettled([
+      const [apptRes, docRes, patRes] = await Promise.allSettled([
         getAppointments(),
-        getDoctors()
+        getDoctors(),
+        getPatients()
       ])
       if (apptRes.status === 'fulfilled') setAppointments(Array.isArray(apptRes.value.data) ? apptRes.value.data : [])
       if (docRes.status  === 'fulfilled') setDoctors(Array.isArray(docRes.value.data) ? docRes.value.data : [])
+      if (patRes.status  === 'fulfilled') setPatients(Array.isArray(patRes.value.data) ? patRes.value.data : [])
     } catch (err) {
       toast.error('Failed to load appointments')
     } finally {
@@ -40,9 +43,17 @@ export default function Appointments() {
 
   const handleAdd = async () => {
     if (!form.patient || !form.doctor) return toast.error('Patient and doctor are required')
+    if (!form.date) return toast.error('Date is required')
     try {
       setSaving(true)
-      await createAppointment({ ...form, status: 'Waiting' })
+      await createAppointment({
+        patient: form.patient,   // ✅ ObjectId from dropdown
+        doctor:  form.doctor,    // ✅ ObjectId from dropdown
+        date:    form.date,
+        time:    form.time,
+        issue:   form.issue,
+        status:  'Waiting'
+      })
       toast.success('Appointment booked!')
       setForm({ patient: '', doctor: '', date: '', time: '', issue: '' })
       setShowForm(false)
@@ -100,20 +111,31 @@ export default function Appointments() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
             <h3 className="text-white font-semibold mb-4">New Appointment</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              <input placeholder="Patient Name *" value={form.patient}
-                onChange={e => setForm({ ...form, patient: e.target.value })}
-                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-500 text-sm" />
+
+              {/* ✅ Patient dropdown — sends ObjectId */}
+              <select value={form.patient} onChange={e => setForm({ ...form, patient: e.target.value })}
+                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
+                <option value="">Select Patient *</option>
+                {patients.map(p => (
+                  <option key={p._id} value={p._id}>{p.name}</option>
+                ))}
+              </select>
+
+              {/* ✅ Doctor dropdown — sends ObjectId */}
               <select value={form.doctor} onChange={e => setForm({ ...form, doctor: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
                 <option value="">Select Doctor *</option>
-                {doctors.map(d => <option key={d._id} value={d.name}>{d.name}</option>)}
-                {/* Fallback if no doctors in DB */}
-                {doctors.length === 0 && ['Dr. Mehta', 'Dr. Singh', 'Dr. Rao'].map(d => <option key={d} value={d}>{d}</option>)}
+                {doctors.map(d => (
+                  <option key={d._id} value={d._id}>{d.name}</option>
+                ))}
               </select>
+
               <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm" />
+
               <input type="time" value={form.time} onChange={e => setForm({ ...form, time: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm" />
+
               <input placeholder="Chief Complaint" value={form.issue} onChange={e => setForm({ ...form, issue: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-500 text-sm sm:col-span-2 lg:col-span-1" />
             </div>
@@ -160,11 +182,12 @@ export default function Appointments() {
                 <tbody className="divide-y divide-gray-800">
                   {filtered.map(a => (
                     <tr key={a._id} className="hover:bg-gray-800/50 transition-colors">
-                      <td className="px-5 py-3.5 text-white font-medium text-sm">{a.patient || a.patientName}</td>
-                      <td className="px-5 py-3.5 text-gray-300 text-sm">{a.doctor || a.doctorName}</td>
-                      <td className="px-5 py-3.5 text-gray-400 text-sm">{a.date ? new Date(a.date).toLocaleDateString('en-IN') : a.date}</td>
-                      <td className="px-5 py-3.5 text-gray-400 text-sm">{a.time}</td>
-                      <td className="px-5 py-3.5 text-gray-300 text-sm">{a.issue}</td>
+                      {/* ✅ Handle both populated objects and plain strings */}
+                      <td className="px-5 py-3.5 text-white font-medium text-sm">{a.patient?.name || a.patientName || a.patient}</td>
+                      <td className="px-5 py-3.5 text-gray-300 text-sm">{a.doctor?.name || a.doctorName || a.doctor}</td>
+                      <td className="px-5 py-3.5 text-gray-400 text-sm">{a.date ? new Date(a.date).toLocaleDateString('en-IN') : '—'}</td>
+                      <td className="px-5 py-3.5 text-gray-400 text-sm">{a.time || '—'}</td>
+                      <td className="px-5 py-3.5 text-gray-300 text-sm">{a.issue || '—'}</td>
                       <td className="px-5 py-3.5">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[a.status] || 'bg-gray-700 text-gray-300'}`}>
                           {a.status}

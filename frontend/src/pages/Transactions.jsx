@@ -5,10 +5,8 @@ import toast from 'react-hot-toast'
 import { getTransactions, createTransaction, deleteTransaction } from '../api'
 
 const typeColors = {
-  income:  'bg-green-900 text-green-400',
-  expense: 'bg-red-900 text-red-400',
-  credit:  'bg-green-900 text-green-400',
-  debit:   'bg-red-900 text-red-400',
+  'Income':  'bg-green-900 text-green-400',  // ✅ was 'income'
+  'Expense': 'bg-red-900 text-red-400',       // ✅ was 'expense'
 }
 
 export default function Transactions() {
@@ -17,7 +15,7 @@ export default function Transactions() {
   const [saving, setSaving]             = useState(false)
   const [showForm, setShowForm]         = useState(false)
   const [filter, setFilter]             = useState('All')
-  const [form, setForm] = useState({ description: '', amount: '', type: 'income', category: '' })
+  const [form, setForm] = useState({ description: '', amount: '', type: 'Income', category: '' }) // ✅ was 'income'
 
   const fetchTransactions = async () => {
     try {
@@ -40,7 +38,7 @@ export default function Transactions() {
       setSaving(true)
       await createTransaction({ ...form, amount: parseFloat(form.amount) })
       toast.success('Transaction added!')
-      setForm({ description: '', amount: '', type: 'income', category: '' })
+      setForm({ description: '', amount: '', type: 'Income', category: '' }) // ✅ was 'income'
       setShowForm(false)
       fetchTransactions()
     } catch (err) {
@@ -61,9 +59,10 @@ export default function Transactions() {
     }
   }
 
-  const totalIncome  = transactions.filter(t => ['income','credit'].includes(t.type?.toLowerCase())).reduce((s,t) => s + (Number(t.amount)||0), 0)
-  const totalExpense = transactions.filter(t => ['expense','debit'].includes(t.type?.toLowerCase())).reduce((s,t) => s + (Number(t.amount)||0), 0)
-  const filtered = filter === 'All' ? transactions : transactions.filter(t => t.type?.toLowerCase() === filter.toLowerCase())
+  // ✅ Match capitalized enum values from DB
+  const totalIncome  = transactions.filter(t => t.type === 'Income').reduce((s, t) => s + (Number(t.amount) || 0), 0)
+  const totalExpense = transactions.filter(t => t.type === 'Expense').reduce((s, t) => s + (Number(t.amount) || 0), 0)
+  const filtered = filter === 'All' ? transactions : transactions.filter(t => t.type === filter)
 
   return (
     <div className="flex bg-gray-950 min-h-screen">
@@ -113,8 +112,8 @@ export default function Transactions() {
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-500 text-sm" />
               <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
+                <option value="Income">Income</option>   {/* ✅ was "income" */}
+                <option value="Expense">Expense</option> {/* ✅ was "expense" */}
               </select>
               <input placeholder="Category (e.g. Pharmacy)" value={form.category}
                 onChange={e => setForm({ ...form, category: e.target.value })}
@@ -133,7 +132,7 @@ export default function Transactions() {
           </div>
         )}
 
-        {/* Filter Tabs */}
+        {/* Filter Tabs — ✅ match exact DB enum values */}
         <div className="flex flex-wrap gap-2 mb-5">
           {['All', 'Income', 'Expense'].map(f => (
             <button key={f} onClick={() => setFilter(f)}
@@ -163,14 +162,14 @@ export default function Transactions() {
                 <tbody className="divide-y divide-gray-800">
                   {filtered.map((t, i) => (
                     <tr key={t._id || i} className="hover:bg-gray-800/50 transition-colors">
-                      <td className="px-5 py-3.5 text-white font-medium text-sm">{t.description || t.title || '—'}</td>
+                      <td className="px-5 py-3.5 text-white font-medium text-sm">{t.description || '—'}</td>
                       <td className="px-5 py-3.5 text-gray-400 text-sm">{t.category || '—'}</td>
                       <td className="px-5 py-3.5">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeColors[t.type?.toLowerCase()] || 'bg-gray-700 text-gray-300'}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${typeColors[t.type] || 'bg-gray-700 text-gray-300'}`}>
                           {t.type || '—'}
                         </span>
                       </td>
-                      <td className={`px-5 py-3.5 font-semibold text-sm ${['income','credit'].includes(t.type?.toLowerCase()) ? 'text-green-400' : 'text-red-400'}`}>
+                      <td className={`px-5 py-3.5 font-semibold text-sm ${t.type === 'Income' ? 'text-green-400' : 'text-red-400'}`}>
                         ₹{Number(t.amount || 0).toLocaleString('en-IN')}
                       </td>
                       <td className="px-5 py-3.5 text-gray-400 text-sm">

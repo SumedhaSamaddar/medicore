@@ -1,8 +1,9 @@
+
 // src/pages/Billing.jsx
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import toast from 'react-hot-toast'
-import { getInvoices, createInvoice, updateInvoice } from '../api'
+import { getInvoices, createInvoice, updateInvoice, getPatients, getDoctors } from '../api'
 
 const statusColors = {
   'Paid':    'bg-green-900 text-green-400',
@@ -12,25 +13,33 @@ const statusColors = {
 
 export default function Billing() {
   const [invoices, setInvoices] = useState([])
+  const [patients, setPatients] = useState([])
+  const [doctors, setDoctors]   = useState([])
   const [loading, setLoading]   = useState(true)
   const [saving, setSaving]     = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [filter, setFilter]     = useState('All')
   const [form, setForm] = useState({ patient: '', doctor: '', amount: '', method: 'Cash' })
 
-  const fetchInvoices = async () => {
+  const fetchAll = async () => {
     try {
       setLoading(true)
-      const res = await getInvoices()
-      setInvoices(Array.isArray(res.data) ? res.data : [])
+      const [invRes, patRes, docRes] = await Promise.allSettled([
+        getInvoices(),
+        getPatients(),
+        getDoctors()
+      ])
+      if (invRes.status === 'fulfilled') setInvoices(Array.isArray(invRes.value.data) ? invRes.value.data : [])
+      if (patRes.status === 'fulfilled') setPatients(Array.isArray(patRes.value.data) ? patRes.value.data : [])
+      if (docRes.status === 'fulfilled') setDoctors(Array.isArray(docRes.value.data) ? docRes.value.data : [])
     } catch (err) {
-      toast.error('Failed to load invoices')
+      toast.error('Failed to load data')
     } finally {
       setLoading(false)
     }
   }
 
-  useEffect(() => { fetchInvoices() }, [])
+  useEffect(() => { fetchAll() }, [])
 
   const totalRevenue  = invoices.filter(i => i.status === 'Paid').reduce((s, i) => s + (Number(i.totalAmount || i.amount) || 0), 0)
   const pendingAmount = invoices.filter(i => i.status === 'Pending').reduce((s, i) => s + (Number(i.totalAmount || i.amount) || 0), 0)
@@ -40,16 +49,16 @@ export default function Billing() {
     try {
       setSaving(true)
       await createInvoice({
-        ...form,
-        amount: parseFloat(form.amount),
-        totalAmount: parseFloat(form.amount),
-        date: new Date().toISOString().split('T')[0],
-        status: 'Pending'
+        patient: form.patient,           // ✅ now an ObjectId from dropdown
+        doctor:  form.doctor || undefined,
+        amount:  parseFloat(form.amount),
+        method:  form.method,
+        status:  'Pending'
       })
       toast.success('Invoice created!')
       setForm({ patient: '', doctor: '', amount: '', method: 'Cash' })
       setShowForm(false)
-      fetchInvoices()
+      fetchAll()
     } catch (err) {
       toast.error('Failed to create invoice')
     } finally {
@@ -107,19 +116,34 @@ export default function Billing() {
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
             <h3 className="text-white font-semibold mb-4">New Invoice</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              <input placeholder="Patient Name *" value={form.patient}
-                onChange={e => setForm({ ...form, patient: e.target.value })}
-                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-500 text-sm" />
-              <input placeholder="Doctor Name" value={form.doctor}
-                onChange={e => setForm({ ...form, doctor: e.target.value })}
-                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-500 text-sm" />
+
+              {/* ✅ Patient dropdown — sends ObjectId */}
+              <select value={form.patient} onChange={e => setForm({ ...form, patient: e.target.value })}
+                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
+                <option value="">Select Patient *</option>
+                {patients.map(p => (
+                  <option key={p._id} value={p._id}>{p.name}</option>
+                ))}
+              </select>
+
+              {/* ✅ Doctor dropdown — sends ObjectId */}
+              <select value={form.doctor} onChange={e => setForm({ ...form, doctor: e.target.value })}
+                className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
+                <option value="">Select Doctor</option>
+                {doctors.map(d => (
+                  <option key={d._id} value={d._id}>{d.name}</option>
+                ))}
+              </select>
+
               <input type="number" placeholder="Amount (₹) *" value={form.amount}
                 onChange={e => setForm({ ...form, amount: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 placeholder-gray-500 text-sm" />
+
               <select value={form.method} onChange={e => setForm({ ...form, method: e.target.value })}
                 className="bg-gray-800 text-white border border-gray-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-blue-500 text-sm">
                 {['Cash', 'UPI', 'Card', 'Insurance'].map(m => <option key={m}>{m}</option>)}
               </select>
+
             </div>
             <div className="flex gap-3 mt-4">
               <button onClick={handleAdd} disabled={saving}
@@ -165,9 +189,9 @@ export default function Billing() {
                   {filtered.map((inv, i) => (
                     <tr key={inv._id || i} className="hover:bg-gray-800/50 transition-colors">
                       <td className="px-5 py-3.5 text-blue-400 font-mono text-xs">{inv.invoiceId || inv._id?.slice(-6).toUpperCase() || `INV-${i + 1}`}</td>
-                      <td className="px-5 py-3.5 text-white font-medium text-sm">{inv.patient || inv.patientName}</td>
-                      <td className="px-5 py-3.5 text-gray-300 text-sm">{inv.doctor || inv.doctorName || '—'}</td>
-                      <td className="px-5 py-3.5 text-gray-400 text-sm">{inv.date ? new Date(inv.date).toLocaleDateString('en-IN') : '—'}</td>
+                      <td className="px-5 py-3.5 text-white font-medium text-sm">{inv.patient?.name || inv.patientName || inv.patient}</td>
+                      <td className="px-5 py-3.5 text-gray-300 text-sm">{inv.doctor?.name || inv.doctorName || '—'}</td>
+                      <td className="px-5 py-3.5 text-gray-400 text-sm">{inv.createdAt ? new Date(inv.createdAt).toLocaleDateString('en-IN') : '—'}</td>
                       <td className="px-5 py-3.5 text-white font-semibold text-sm">₹{Number(inv.totalAmount || inv.amount || 0).toLocaleString('en-IN')}</td>
                       <td className="px-5 py-3.5 text-gray-300 text-sm">{inv.method || inv.paymentMethod || '—'}</td>
                       <td className="px-5 py-3.5">

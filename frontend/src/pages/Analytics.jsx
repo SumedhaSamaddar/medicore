@@ -1,4 +1,3 @@
-// frontend/src/pages/Analytics.jsx
 import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import toast from 'react-hot-toast'
@@ -18,11 +17,10 @@ export default function Analytics() {
   const [form, setForm] = useState({
     description: '',
     amount: '',
-    type: 'income',
+    type: 'Income',       // ✅ was 'income'
     category: 'General'
   })
 
-  // ── Fetch analytics + recent transactions ───────────────────────────────
   const fetchAll = async () => {
     try {
       setLoading(true)
@@ -48,7 +46,6 @@ export default function Analytics() {
 
   useEffect(() => { fetchAll() }, [])
 
-  // ── Save new transaction ─────────────────────────────────────────────────
   const handleSave = async () => {
     if (!form.description.trim()) return toast.error('Description is required')
     if (!form.amount || isNaN(form.amount)) return toast.error('Enter a valid amount')
@@ -58,13 +55,13 @@ export default function Analytics() {
       await createTransaction({
         description: form.description,
         amount: parseFloat(form.amount),
-        type: form.type,
+        type: form.type,         // ✅ now sends 'Income' or 'Expense'
         category: form.category
       })
       toast.success('Transaction saved!')
       setShowTransactionForm(false)
-      setForm({ description: '', amount: '', type: 'income', category: 'General' })
-      fetchAll() // Refresh numbers
+      setForm({ description: '', amount: '', type: 'Income', category: 'General' })
+      fetchAll()
     } catch (err) {
       console.error('Save transaction error:', err)
       toast.error('Failed to save transaction')
@@ -73,14 +70,12 @@ export default function Analytics() {
     }
   }
 
-  // ── Helpers ──────────────────────────────────────────────────────────────
   const fmt = (n) => `₹${Number(n || 0).toLocaleString('en-IN')}`
 
   const maxRevenue = analytics?.monthlyRevenue?.length
     ? Math.max(...analytics.monthlyRevenue.map(m => m.revenue), 1)
     : 1
 
-  // ── Loading skeleton ─────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex bg-gray-950 min-h-screen">
@@ -101,7 +96,7 @@ export default function Analytics() {
 
       <div className="ml-0 md:ml-64 flex-1 p-4 md:p-8 pt-16 md:pt-8">
 
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="text-xl md:text-2xl font-bold text-white">Analytics</h2>
@@ -115,7 +110,7 @@ export default function Analytics() {
           </button>
         </div>
 
-        {/* ── Stats Cards ── */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
             <p className="text-gray-400 text-sm">Total Revenue</p>
@@ -154,7 +149,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* ── Patient & Appointment Stats ── */}
+        {/* Patient & Appointment Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <p className="text-gray-400 text-sm">Total Patients</p>
@@ -173,7 +168,7 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* ── Monthly Revenue Chart (CSS bar chart) ── */}
+        {/* Monthly Revenue Chart */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6 mb-8">
           <h3 className="text-white font-semibold mb-6">Monthly Revenue (Last 6 Months)</h3>
 
@@ -200,7 +195,7 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* ── Recent Transactions Table ── */}
+        {/* Recent Transactions Table */}
         <div className="bg-gray-900 border border-gray-800 rounded-xl p-6">
           <h3 className="text-white font-semibold mb-4">Recent Transactions</h3>
 
@@ -221,7 +216,7 @@ export default function Analytics() {
                       <td className="py-3 pr-4 text-white">{t.description || t.title || '—'}</td>
                       <td className="py-3 pr-4">
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                          (t.type || '').toLowerCase() === 'income' || (t.type || '').toLowerCase() === 'credit'
+                          (t.type || '').toLowerCase() === 'income'
                             ? 'bg-green-900 text-green-400'
                             : 'bg-red-900 text-red-400'
                         }`}>
@@ -248,7 +243,7 @@ export default function Analytics() {
           )}
         </div>
 
-        {/* ── Add Transaction Modal ── */}
+        {/* Add Transaction Modal */}
         {showTransactionForm && (
           <div
             className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
@@ -281,8 +276,8 @@ export default function Analytics() {
                 onChange={e => setForm({ ...form, type: e.target.value })}
                 className="w-full mb-3 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
               >
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
+                <option value="Income">Income</option>   {/* ✅ was "income" */}
+                <option value="Expense">Expense</option> {/* ✅ was "expense" */}
               </select>
 
               <input
