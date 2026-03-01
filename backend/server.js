@@ -8,11 +8,11 @@ const app = express();
 
 /* ================= MIDDLEWARE ================= */
 app.use(cors({
-  origin: [
-    'https://69a3a0c8c5f30317d6b5c56e--medicore-2.netlify.app'
-  ],
+  origin: true,
   credentials: true
 }));
+app.options('*', cors());
+
 app.use(express.json());
 
 /* ================= HEALTH CHECK ================= */
@@ -35,8 +35,6 @@ app.use('/api/invoices', require('./routes/invoices'));
 app.use('/api/transactions', require('./routes/transaction'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/emergency', require('./routes/emergency'));
-
-/* 🔥 AI ROUTE — IMPORTANT */
 app.use('/api/ai', require('./routes/ai'));
 
 /* ================= 404 HANDLER ================= */
