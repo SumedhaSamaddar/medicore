@@ -8,7 +8,9 @@ const app = express();
 
 /* ================= MIDDLEWARE ================= */
 app.use(cors({
-  origin: '*', // you can restrict later
+  origin: [
+    'https://69a3a0c8c5f30317d6b5c56e--medicore-2.netlify.app'
+  ],
   credentials: true
 }));
 app.use(express.json());
